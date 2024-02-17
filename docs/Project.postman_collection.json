@@ -1,0 +1,103 @@
+{
+	"info": {
+		"_postman_id": "22bd6191-177d-447e-ba4d-b02cba7316f3",
+		"name": "Expression",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20038572"
+	},
+	"item": [
+		{
+			"name": "Create Expression",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Idempotency-Key",
+						"value": "abcd",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "expression",
+							"value": "2+2*2",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/expression",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"expression"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Expression",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/expression/a1fd5749-9855-4949-8129-c52bcebbba4f",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"expression",
+						"a1fd5749-9855-4949-8129-c52bcebbba4f"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Expressions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/expressions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"expressions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Agents",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/agents",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"agents"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

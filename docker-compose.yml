@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: 'rabbitmq:3-management'
+    ports:
+      - '5672:5672' # AMQP port
+      - '15672:15672' # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - 'rabbitmq_data:/var/lib/rabbitmq'
+
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: testttdb
+      POSTGRES_USER: testttuser
+      POSTGRES_PASSWORD: testttpass
+    volumes:
+      - ./data/migrations/:/docker-entrypoint-initdb.d/
+      - ./data/postgres/:/var/lib/postgresql/data
+    command: ["postgres", "-c", "log_statement=all"]
+    ports:
+      - "5432:5432"
+
+  orchestrator:
+    build: ..
+    command: go run ./cmd/orchestrator/main.go
+    restart: always
+    depends_on:
+      - rabbitmq
+      - postgres
+    links:
+      - rabbitmq
+      - postgres
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: '/'
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      DATABASE_URL: postgres://testttuser:testttpass@postgres:5432/testttdb?sslmode=disable
+    ports:
+      - '8080:8080'
+    volumes:
+      - './:/orchestrator'
+      - 'go_modules:/go/pkg/mod'
+  agent:
+    build: ..
+    command: go run ./cmd/agent/main.go
+    restart: always
+    depends_on:
+      - rabbitmq
+      - postgres
+      - orchestrator
+    links:
+      - rabbitmq
+      - postgres
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: '/'
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      DATABASE_URL: postgres://testttuser:testttpass@postgres:5432/testttdb?sslmode=disable
+    volumes:
+      - './:/agent'
+      - 'go_modules:/go/pkg/mod'
+
+volumes:
+  rabbitmq_data:
+  postgres_data:
+  go_modules:
+
+networks:
+  my_custom_network:
+    driver: bridge
