@@ -12,7 +12,7 @@
 3. ждем пару минут (зависит от компьютера и интернет-соединения) пока не запустятся все компоненты системы
 
 ## Доступные команды
-   * make build (docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build
+   * make build (docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build)
    * make scale любое_число_агентов (docker-compose --scale agent=любое_число_агентов)
    * make rebuild (docker-compose down && docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build)
    * make down (docker-compose down)
