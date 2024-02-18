@@ -58,12 +58,12 @@ curl --location 'http://localhost:8080/expression/a1fd5749-9855-4949-8129-c52bce
 }
 ```
 
-__2. 2+(2*2) (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)__
+__2. (2+2)*2 (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)__
 
 ``` 
 curl --location 'http://localhost:8080/expression' \
 --header 'X-Idempotency-Key: 2' \
---form 'expression="2+(2*2)"'
+--form 'expression="(2+2)*2"'
   ```
 
 ```
