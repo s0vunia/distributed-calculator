@@ -161,7 +161,7 @@ func (r *RabbitMQRepository) Reconnect() {
 		err := r.Connect()
 		if err == nil {
 			log.Printf("Successfully reconnect")
-
+			r.NotifyClose()
 			return
 		}
 		log.Printf("Failed to reconnect: %v, retrying in %v\n", err, delay)
