@@ -6,9 +6,9 @@ import (
 
 var ErrQueueNotConnected = errors.New("queue not connected")
 
-type Queue interface {
+type Repository interface {
 	// Connect осуществляет соединение с очередью с именем queueName
-	Connect(queueName string) error
+	Connect() error
 	// Close закрывает соединение с очередью
 	Close() error
 	// Publish публикует запись в очередь

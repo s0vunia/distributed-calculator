@@ -3,28 +3,32 @@ package queue
 import (
 	"fmt"
 	"github.com/streadway/amqp"
+	"time"
 )
 
 type RabbitMQRepository struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
-	queue   amqp.Queue
-	closeCh chan *amqp.Error
-	url     string
+	conn      *amqp.Connection
+	channel   *amqp.Channel
+	queue     amqp.Queue
+	closeCh   chan *amqp.Error
+	url       string
+	queueName string
 }
 
 func NewRabbitMQRepository(url, queueName string) (*RabbitMQRepository, error) {
 	repo := &RabbitMQRepository{
 		url: url,
 	}
-	err := repo.Connect(queueName)
+	repo.queueName = queueName
+	err := repo.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
+	repo.NotifyClose()
 	return repo, nil
 }
 
-func (r *RabbitMQRepository) Connect(queueName string) error {
+func (r *RabbitMQRepository) Connect() error {
 	var err error
 	r.conn, err = amqp.Dial(r.url)
 	if err != nil {
@@ -38,12 +42,12 @@ func (r *RabbitMQRepository) Connect(queueName string) error {
 	}
 
 	r.queue, err = r.channel.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+		r.queueName, // name
+		true,        // durable
+		false,       // delete when unused
+		false,       // exclusive
+		false,       // no-wait
+		nil,         // arguments
 	)
 	if err != nil {
 		r.channel.Close() // Закрываем канал, если очередь не объявлена
@@ -115,5 +119,54 @@ func (r *RabbitMQRepository) Consume() (<-chan []byte, error) {
 		}()
 
 		return taskChan, nil
+	}
+}
+
+// ReconnectDelay - начальная задержка перед попыткой переподключения.
+const ReconnectDelay = 5 * time.Second
+
+// MaxReconnectDelay - максимальная задержка перед попыткой переподключения.
+const MaxReconnectDelay = 30 * time.Second
+
+// ReconnectBackoff - коэффициент увеличения задержки.
+const ReconnectBackoff = 2
+
+// NotifyClose - метод для прослушивания событий закрытия соединения и канала.
+func (r *RabbitMQRepository) NotifyClose() {
+	go func() {
+		for {
+			select {
+			case err := <-r.conn.NotifyClose(make(chan *amqp.Error)):
+				r.handleClose(err)
+			case err := <-r.channel.NotifyClose(make(chan *amqp.Error)):
+				r.handleClose(err)
+			}
+		}
+	}()
+}
+
+// handleClose - метод для обработки событий закрытия соединения и канала.
+func (r *RabbitMQRepository) handleClose(err *amqp.Error) {
+	if err != nil {
+		fmt.Printf("Connection closed: %v\n", err)
+	}
+	r.Reconnect()
+}
+
+// Reconnect - метод для переподключения к RabbitMQ.
+func (r *RabbitMQRepository) Reconnect() {
+	delay := ReconnectDelay
+	for {
+		err := r.Connect()
+		if err == nil {
+			r.NotifyClose()
+			return
+		}
+		fmt.Printf("Failed to reconnect: %v, retrying in %v\n", err, delay)
+		time.Sleep(delay)
+		delay *= ReconnectBackoff
+		if delay > MaxReconnectDelay {
+			delay = MaxReconnectDelay
+		}
 	}
 }
