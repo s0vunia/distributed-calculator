@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"log"
-	"myproject/internal/config"
 	"myproject/internal/models"
 	"myproject/internal/repositories/queue"
 	"time"
@@ -20,29 +19,33 @@ type IAgent interface {
 }
 
 type Agent struct {
-	id                   string
-	queueRepository      queue.Queue
-	demonQueueRepository queue.Queue
+	id                         string
+	expressionQueueRepository  queue.Repository
+	calculationQueueRepository queue.Repository
+	heartbeatQueueRepository   queue.Repository
+	rpcQueueRepository         queue.Repository
 }
 
-func NewAgent(queueRepo, demonQueueRepo queue.Queue) *Agent {
+func NewAgent(expressionQueueRepo, calculationQueueRepo, heartbeatQueueRepo, rpcQueueRepo queue.Repository) *Agent {
 	id := uuid.NewString()
 	return &Agent{
-		id:                   id,
-		queueRepository:      queueRepo,
-		demonQueueRepository: demonQueueRepo,
+		id:                         id,
+		expressionQueueRepository:  expressionQueueRepo,
+		calculationQueueRepository: calculationQueueRepo,
+		heartbeatQueueRepository:   heartbeatQueueRepo,
+		rpcQueueRepository:         rpcQueueRepo,
 	}
 }
 
 func (a *Agent) Start() {
 	// соединение с очередью subexpressions
-	err := a.queueRepository.Connect(config.NameQueueWithTasks)
+	err := a.expressionQueueRepository.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
-	defer a.queueRepository.Close()
+	defer a.expressionQueueRepository.Close()
 
-	tasks, err := a.queueRepository.Consume()
+	tasks, err := a.expressionQueueRepository.Consume()
 	if err != nil {
 		log.Fatalf("Failed to consume tasks from queue: %v", err)
 	}
@@ -61,7 +64,7 @@ func (a *Agent) Start() {
 			IdSubExpression: expressionStruct.Id,
 			IdAgent:         idAgent,
 		}
-		err := a.queueRepository.Connect(config.NameQueueWithRPC)
+		err := a.rpcQueueRepository.Connect()
 		if err != nil {
 			log.Printf("error connect to rpc queue")
 		}
@@ -69,11 +72,11 @@ func (a *Agent) Start() {
 		if err != nil {
 			log.Printf("error unmarshal rpc")
 		}
-		err = a.queueRepository.Publish(rpcJson)
+		err = a.rpcQueueRepository.Publish(rpcJson)
 		if err != nil {
 			log.Printf("error publish rpc")
 		}
-		a.queueRepository.Close()
+		a.rpcQueueRepository.Close()
 
 		// подсчет subexpression
 		a.CalculateExpression(expressionStruct)
@@ -87,14 +90,14 @@ func (a *Agent) CalculateExpression(task *models.SubExpression) {
 	}
 	task.Result = result
 
-	err = a.queueRepository.Connect(config.NameQueueWithFinishedTasks)
+	err = a.calculationQueueRepository.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
-	defer a.queueRepository.Close()
+	defer a.calculationQueueRepository.Close()
 
 	expressionJson, err := json.Marshal(task)
-	err = a.queueRepository.Publish(expressionJson)
+	err = a.calculationQueueRepository.Publish(expressionJson)
 	if err != nil {
 		log.Printf("Failed to publish finished task to queue: %v", err)
 	}
@@ -102,11 +105,11 @@ func (a *Agent) CalculateExpression(task *models.SubExpression) {
 
 func (a *Agent) StartHeartbeats() {
 	// Открываем соединение один раз, а не на каждую итерацию
-	err := a.demonQueueRepository.Connect(config.NameQueueWithHeartbeats)
+	err := a.heartbeatQueueRepository.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v\n", err)
 	}
-	defer a.demonQueueRepository.Close() // Закрыть соединение при завершении функции
+	defer a.heartbeatQueueRepository.Close() // Закрыть соединение при завершении функции
 
 	ticker := time.NewTicker(time.Second * 3)
 	defer ticker.Stop() // Остановить тикер, когда функция завершится
@@ -121,7 +124,7 @@ func (a *Agent) StartHeartbeats() {
 			continue // Продолжить цикл, если кодирование не удалось
 		}
 
-		err = a.demonQueueRepository.Publish(agentJson)
+		err = a.heartbeatQueueRepository.Publish(agentJson)
 		if err != nil {
 			log.Printf("Failed to publish task to queue: %v", err)
 		}

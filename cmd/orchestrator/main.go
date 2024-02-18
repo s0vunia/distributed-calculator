@@ -36,9 +36,9 @@ func Start() {
 
 	// Попытки реконнекта к rabbitmq (так как он не сразу отвечает)
 	ticker := time.NewTicker(time.Second / 2)
-	var queueRepo *queue.RabbitMQRepository
+	var expressionsQueueRepo *queue.RabbitMQRepository
 	for _ = range ticker.C {
-		queueRepo, err = queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithTasks)
+		expressionsQueueRepo, err = queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithTasks)
 		if err != nil {
 			log.Printf("Failed to start queue: %v", err)
 			continue
@@ -46,8 +46,22 @@ func Start() {
 		break
 	}
 
+	calculationsQueueRepository, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithFinishedTasks)
+	if err != nil {
+		log.Printf("Failed to start queue: %v", err)
+	}
+	heartbeatsQueueRepository, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithHeartbeats)
+	if err != nil {
+		log.Printf("Failed to start queue: %v", err)
+	}
+	rpcQueueRepository, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithRPC)
+	if err != nil {
+		log.Printf("Failed to start queue: %v", err)
+	}
+
 	ctx := context.Background()
-	newOrchestrator := orchestrator.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, queueRepo, agentRepo)
+	newOrchestrator := orchestrator.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, expressionsQueueRepo,
+		calculationsQueueRepository, heartbeatsQueueRepository, rpcQueueRepository, agentRepo)
 	// Регистрация хендлеров
 	http.HandleFunc("/expression/", orchestrator.EndpointExpression(newOrchestrator))
 	http.HandleFunc("/expression", orchestrator.EndpointExpression(newOrchestrator))

@@ -37,21 +37,30 @@ type IOrchestrator interface {
 }
 
 type Orchestrator struct {
-	expressionRepository    expression.Repository
-	subExpressionRepository subExpression.Repository
-	agentRepository         agent.Repository
-	queueRepository         queue.Queue
+	expressionRepository        expression.Repository
+	subExpressionRepository     subExpression.Repository
+	agentRepository             agent.Repository
+	expressionsQueueRepository  queue.Repository
+	calculationsQueueRepository queue.Repository
+	heartbeatsQueueRepository   queue.Repository
+	rpcQueueRepository          queue.Repository
 }
 
 func NewOrchestrator(ctx context.Context, expressionRepo expression.Repository,
 	subExpressionRepo subExpression.Repository,
-	queueRepo queue.Queue,
+	expressionsQueueRepo queue.Repository,
+	calculationsQueueRepository queue.Repository,
+	heartbeatsQueueRepository queue.Repository,
+	rpcQueueRepository queue.Repository,
 	agentRepo agent.Repository) *Orchestrator {
 	orch := &Orchestrator{
-		expressionRepository:    expressionRepo,
-		subExpressionRepository: subExpressionRepo,
-		agentRepository:         agentRepo,
-		queueRepository:         queueRepo,
+		expressionRepository:        expressionRepo,
+		subExpressionRepository:     subExpressionRepo,
+		agentRepository:             agentRepo,
+		expressionsQueueRepository:  expressionsQueueRepo,
+		calculationsQueueRepository: calculationsQueueRepository,
+		heartbeatsQueueRepository:   heartbeatsQueueRepository,
+		rpcQueueRepository:          rpcQueueRepository,
 	}
 	go orch.SendSubExpression()
 	go orch.ReceiveHeartbeats()
@@ -97,13 +106,13 @@ func (o *Orchestrator) UpdateExpressionState(ctx context.Context, key string, st
 }
 
 func (o *Orchestrator) ReceiveHeartbeats() {
-	err := o.queueRepository.Connect(config.NameQueueWithHeartbeats)
+	err := o.heartbeatsQueueRepository.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
-	defer o.queueRepository.Close()
+	defer o.heartbeatsQueueRepository.Close()
 
-	heartbeats, err := o.queueRepository.Consume()
+	heartbeats, err := o.heartbeatsQueueRepository.Consume()
 	if err != nil {
 		log.Printf("Failed to consume tasks from queue: %v", err)
 	}
@@ -119,13 +128,13 @@ func (o *Orchestrator) ReceiveHeartbeats() {
 }
 
 func (o *Orchestrator) ReceiveCalculations(ctx context.Context) {
-	err := o.queueRepository.Connect(config.NameQueueWithFinishedTasks)
+	err := o.calculationsQueueRepository.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
-	defer o.queueRepository.Close()
+	defer o.calculationsQueueRepository.Close()
 
-	finishedTasks, err := o.queueRepository.Consume()
+	finishedTasks, err := o.calculationsQueueRepository.Consume()
 	if err != nil {
 		log.Printf("Failed to consume tasks from queue: %v", err)
 	}
@@ -174,7 +183,7 @@ func (o *Orchestrator) GetAgents() ([]*models.Agent, error) {
 func (o *Orchestrator) SendSubExpression() {
 	listener := o.subExpressionRepository.GetSubExpressions()
 	for subExpr := range listener {
-		err := o.queueRepository.Connect(config.NameQueueWithTasks)
+		err := o.expressionsQueueRepository.Connect()
 		if err != nil {
 			log.Printf("")
 		}
@@ -182,21 +191,21 @@ func (o *Orchestrator) SendSubExpression() {
 		if err != nil {
 			log.Printf("")
 		}
-		err = o.queueRepository.Publish(expressionJson)
+		err = o.expressionsQueueRepository.Publish(expressionJson)
 		if err != nil {
 			log.Printf("")
 		}
-		o.queueRepository.Close()
+		o.expressionsQueueRepository.Close()
 	}
 }
 func (o *Orchestrator) ReceiveRPCTasks(ctx context.Context) {
-	err := o.queueRepository.Connect(config.NameQueueWithRPC)
+	err := o.rpcQueueRepository.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
-	defer o.queueRepository.Close()
+	defer o.rpcQueueRepository.Close()
 
-	rpcTasks, err := o.queueRepository.Consume()
+	rpcTasks, err := o.rpcQueueRepository.Consume()
 	if err != nil {
 		log.Printf("Failed to consume tasks from queue: %v", err)
 	}
