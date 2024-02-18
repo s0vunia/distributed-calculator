@@ -3,6 +3,7 @@ package queue
 import (
 	"fmt"
 	"github.com/streadway/amqp"
+	"log"
 	"time"
 )
 
@@ -159,10 +160,11 @@ func (r *RabbitMQRepository) Reconnect() {
 	for {
 		err := r.Connect()
 		if err == nil {
-			r.NotifyClose()
+			log.Printf("Successfully reconnect")
+
 			return
 		}
-		fmt.Printf("Failed to reconnect: %v, retrying in %v\n", err, delay)
+		log.Printf("Failed to reconnect: %v, retrying in %v\n", err, delay)
 		time.Sleep(delay)
 		delay *= ReconnectBackoff
 		if delay > MaxReconnectDelay {
