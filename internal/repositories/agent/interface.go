@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"myproject/project/internal/models"
+	"myproject/internal/models"
 )
 
 type Repository interface {

@@ -5,15 +5,15 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"log"
-	models2 "myproject/project/internal/models"
-	"myproject/project/internal/repositories/subExpression"
+	"myproject/internal/models"
+	"myproject/internal/repositories/subExpression"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 // splitToSubtasks делать полное арифметическое выражение на подзадачи
-func splitToSubtasks(ctx context.Context, expr *models2.Expression, subExpressionRepo subExpression.Repository) (tasks []*models2.SubExpression, err error) {
+func splitToSubtasks(ctx context.Context, expr *models.Expression, subExpressionRepo subExpression.Repository) (tasks []*models.SubExpression, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -32,9 +32,9 @@ func splitToSubtasks(ctx context.Context, expr *models2.Expression, subExpressio
 	uuidRegex := regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`)
 
 	// функция создания subexpression
-	getTempVar := func(operand1, operand2, element string, isLast bool) (*models2.SubExpression, error) {
+	getTempVar := func(operand1, operand2, element string, isLast bool) (*models.SubExpression, error) {
 		uid, _ := uuid.Parse(expr.Id)
-		subExpr := &models2.SubExpression{
+		subExpr := &models.SubExpression{
 			ExpressionId: uid,
 			IsLast:       isLast,
 			Action:       element,

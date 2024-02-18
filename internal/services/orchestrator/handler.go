@@ -174,3 +174,19 @@ func GetSubExpressions(orchestrator IOrchestrator) http.HandlerFunc {
 		fmt.Fprint(w, string(jsonData))
 	}
 }
+
+func GetOperators(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	operators := getOperators()
+	log.Println(operators)
+
+	jsonData, err := json.MarshalIndent(operators, "", "  ")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprint(w, string(jsonData))
+}

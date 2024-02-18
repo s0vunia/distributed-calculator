@@ -7,28 +7,27 @@ import (
 	"github.com/google/uuid"
 	"log"
 	"myproject/internal/config"
-	config2 "myproject/project/internal/config"
-	models2 "myproject/project/internal/models"
-	"myproject/project/internal/repositories/agent"
-	"myproject/project/internal/repositories/expression"
-	"myproject/project/internal/repositories/queue"
-	"myproject/project/internal/repositories/subExpression"
+	"myproject/internal/models"
+	"myproject/internal/repositories/agent"
+	"myproject/internal/repositories/expression"
+	"myproject/internal/repositories/queue"
+	"myproject/internal/repositories/subExpression"
 	"time"
 )
 
 type IOrchestrator interface {
 	CreateExpression(ctx context.Context, expression, idempotencyKey string) (error, string)
-	GetExpressions(ctx context.Context) ([]*models2.Expression, error)
-	GetSubExpressions(ctx context.Context) ([]*models2.SubExpression, error)
-	GetExpression(ctx context.Context, id string) (*models2.Expression, error)
-	GetExpressionByKey(ctx context.Context, key string) (*models2.Expression, error)
-	UpdateExpressionState(ctx context.Context, key string, state models2.ExpressionState) error
+	GetExpressions(ctx context.Context) ([]*models.Expression, error)
+	GetSubExpressions(ctx context.Context) ([]*models.SubExpression, error)
+	GetExpression(ctx context.Context, id string) (*models.Expression, error)
+	GetExpressionByKey(ctx context.Context, key string) (*models.Expression, error)
+	UpdateExpressionState(ctx context.Context, key string, state models.ExpressionState) error
 	// ReceiveHeartbeats принимает heartbeats из очереди от агента
 	ReceiveHeartbeats()
 	// ReceiveCalculations принимает подсчитанные subexpression из очереди от агента
 	ReceiveCalculations(ctx context.Context)
 	CreateAgentIfNotExists(id string)
-	GetAgents() ([]*models2.Agent, error)
+	GetAgents() ([]*models.Agent, error)
 	// SendSubExpression отправляет subexpressions в очередь, которые могут подсчитаться (являются независимыми от ответов других subexpressions)
 	SendSubExpression()
 	// ReceiveRPCTasks принимает ответы от агента о том, какой subexpression он взял на обработку
@@ -77,28 +76,28 @@ func (o *Orchestrator) CreateExpression(ctx context.Context, expression, idempot
 	return nil, createdExpression.Id
 }
 
-func (o *Orchestrator) GetExpressions(ctx context.Context) ([]*models2.Expression, error) {
+func (o *Orchestrator) GetExpressions(ctx context.Context) ([]*models.Expression, error) {
 	return o.expressionRepository.GetExpressions(ctx)
 }
 
-func (o *Orchestrator) GetSubExpressions(ctx context.Context) ([]*models2.SubExpression, error) {
+func (o *Orchestrator) GetSubExpressions(ctx context.Context) ([]*models.SubExpression, error) {
 	return o.subExpressionRepository.GetSubExpressionsList(ctx)
 }
 
-func (o *Orchestrator) GetExpression(ctx context.Context, id string) (*models2.Expression, error) {
+func (o *Orchestrator) GetExpression(ctx context.Context, id string) (*models.Expression, error) {
 	return o.expressionRepository.GetExpressionById(ctx, id)
 }
 
-func (o *Orchestrator) GetExpressionByKey(ctx context.Context, key string) (*models2.Expression, error) {
+func (o *Orchestrator) GetExpressionByKey(ctx context.Context, key string) (*models.Expression, error) {
 	return o.expressionRepository.GetExpressionByKey(ctx, key)
 }
 
-func (o *Orchestrator) UpdateExpressionState(ctx context.Context, key string, state models2.ExpressionState) error {
+func (o *Orchestrator) UpdateExpressionState(ctx context.Context, key string, state models.ExpressionState) error {
 	return o.expressionRepository.UpdateState(ctx, key, state)
 }
 
 func (o *Orchestrator) ReceiveHeartbeats() {
-	err := o.queueRepository.Connect(config2.NameQueueWithHeartbeats)
+	err := o.queueRepository.Connect(config.NameQueueWithHeartbeats)
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
@@ -109,7 +108,7 @@ func (o *Orchestrator) ReceiveHeartbeats() {
 		log.Printf("Failed to consume tasks from queue: %v", err)
 	}
 	for heartbeat := range heartbeats {
-		agent := models2.Agent{}
+		agent := models.Agent{}
 		err = json.Unmarshal(heartbeat, &agent)
 		if err != nil {
 			log.Printf("Failed to decode agent: %v", err)
@@ -120,7 +119,7 @@ func (o *Orchestrator) ReceiveHeartbeats() {
 }
 
 func (o *Orchestrator) ReceiveCalculations(ctx context.Context) {
-	err := o.queueRepository.Connect(config2.NameQueueWithFinishedTasks)
+	err := o.queueRepository.Connect(config.NameQueueWithFinishedTasks)
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
@@ -131,7 +130,7 @@ func (o *Orchestrator) ReceiveCalculations(ctx context.Context) {
 		log.Printf("Failed to consume tasks from queue: %v", err)
 	}
 	for task := range finishedTasks {
-		expressionStruct := &models2.SubExpression{}
+		expressionStruct := &models.SubExpression{}
 		err = json.Unmarshal(task, expressionStruct)
 		if err != nil {
 			log.Printf("error unmarshal subexpression: %e", err)
@@ -141,7 +140,7 @@ func (o *Orchestrator) ReceiveCalculations(ctx context.Context) {
 			if err != nil {
 				log.Printf("error delete subexpressions: %e", err)
 			}
-			err = o.expressionRepository.UpdateState(ctx, expressionStruct.ExpressionId.String(), models2.ExpressionState(models2.Error))
+			err = o.expressionRepository.UpdateState(ctx, expressionStruct.ExpressionId.String(), models.ExpressionState(models.Error))
 			if err != nil {
 				log.Printf("error update state: %e", err)
 			}
@@ -168,7 +167,7 @@ func (o *Orchestrator) CreateAgentIfNotExists(id string) {
 	_ = o.agentRepository.CreateIfNotExistsAndUpdateHeartbeat(id)
 }
 
-func (o *Orchestrator) GetAgents() ([]*models2.Agent, error) {
+func (o *Orchestrator) GetAgents() ([]*models.Agent, error) {
 	return o.agentRepository.GetAgents()
 }
 
@@ -191,7 +190,7 @@ func (o *Orchestrator) SendSubExpression() {
 	}
 }
 func (o *Orchestrator) ReceiveRPCTasks(ctx context.Context) {
-	err := o.queueRepository.Connect(config2.NameQueueWithRPC)
+	err := o.queueRepository.Connect(config.NameQueueWithRPC)
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
@@ -202,7 +201,7 @@ func (o *Orchestrator) ReceiveRPCTasks(ctx context.Context) {
 		log.Printf("Failed to consume tasks from queue: %v", err)
 	}
 	for rpc := range rpcTasks {
-		rpcAnswer := models2.RPCAnswer{}
+		rpcAnswer := models.RPCAnswer{}
 		err = json.Unmarshal(rpc, &rpcAnswer)
 		if err != nil {
 			log.Printf("Failed to decode rpc answer: %v", err)
@@ -219,7 +218,7 @@ func (o *Orchestrator) RetrySubExpressions(ctx context.Context) {
 		for _, agent := range agents {
 			timeAgent := time.Unix(agent.Heartbeat, 0)
 			// Если от агента не поступает ответа в течение config.RetrySubExpressionTimout
-			if time.Now().Add(-config2.RetrySubExpressionTimout).After(timeAgent) {
+			if time.Now().Add(-config.RetrySubExpressionTimout).After(timeAgent) {
 				agentId, _ := uuid.Parse(agent.Id)
 				// получаем все невыполненные subexpression этого агента
 				tempExpressions, err := o.subExpressionRepository.GetNotCalculatedSubExpressionsByAgentId(ctx, agentId)

@@ -3,7 +3,7 @@ package expression
 import (
 	"context"
 	"github.com/google/uuid"
-	"myproject/project/internal/models"
+	"myproject/internal/models"
 )
 
 type Repository interface {

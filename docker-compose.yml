@@ -26,7 +26,7 @@ services:
       - "5432:5432"
 
   orchestrator:
-    build: ..
+    build: .
     command: go run ./cmd/orchestrator/main.go
     restart: always
     depends_on:
@@ -48,7 +48,7 @@ services:
       - './:/orchestrator'
       - 'go_modules:/go/pkg/mod'
   agent:
-    build: ..
+    build: .
     command: go run ./cmd/agent/main.go
     restart: always
     depends_on:

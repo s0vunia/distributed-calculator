@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"log"
 	"myproject/internal/config"
-	config2 "myproject/project/internal/config"
-	"myproject/project/internal/repositories/agent"
-	"myproject/project/internal/repositories/expression"
-	"myproject/project/internal/repositories/queue"
-	"myproject/project/internal/repositories/subExpression"
-	orchestrator2 "myproject/project/internal/services/orchestrator"
+	"myproject/internal/repositories/agent"
+	"myproject/internal/repositories/expression"
+	"myproject/internal/repositories/queue"
+	"myproject/internal/repositories/subExpression"
+	"myproject/internal/services/orchestrator"
 	"net/http"
 	"time"
 )
@@ -39,7 +38,7 @@ func Start() {
 	ticker := time.NewTicker(time.Second / 2)
 	var queueRepo *queue.RabbitMQRepository
 	for _ = range ticker.C {
-		queueRepo, err = queue.NewRabbitMQRepository(config2.UrlRabbit, config.NameQueueWithTasks)
+		queueRepo, err = queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithTasks)
 		if err != nil {
 			log.Printf("Failed to start queue: %v", err)
 			continue
@@ -48,14 +47,14 @@ func Start() {
 	}
 
 	ctx := context.Background()
-	newOrchestrator := orchestrator2.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, queueRepo, agentRepo)
-
+	newOrchestrator := orchestrator.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, queueRepo, agentRepo)
 	// Регистрация хендлеров
-	http.HandleFunc("/expression/", orchestrator2.EndpointExpression(newOrchestrator))
-	http.HandleFunc("/expression", orchestrator2.EndpointExpression(newOrchestrator))
-	http.HandleFunc("/expressions", orchestrator2.GetExpressions(newOrchestrator))
-	http.HandleFunc("/sub_expressions", orchestrator2.GetSubExpressions(newOrchestrator))
-	http.HandleFunc("/agents", orchestrator2.GetAgents(newOrchestrator))
+	http.HandleFunc("/expression/", orchestrator.EndpointExpression(newOrchestrator))
+	http.HandleFunc("/expression", orchestrator.EndpointExpression(newOrchestrator))
+	http.HandleFunc("/expressions", orchestrator.GetExpressions(newOrchestrator))
+	http.HandleFunc("/sub_expressions", orchestrator.GetSubExpressions(newOrchestrator))
+	http.HandleFunc("/agents", orchestrator.GetAgents(newOrchestrator))
+	http.HandleFunc("/operators", orchestrator.GetOperators)
 
 	port := ":8080"
 	log.Printf("Starting server on %s", port)

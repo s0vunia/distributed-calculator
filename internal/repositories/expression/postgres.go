@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"myproject/project/internal/models"
+	"myproject/internal/models"
 )
 
 type PostgresRepository struct {

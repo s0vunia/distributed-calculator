@@ -6,7 +6,7 @@ import (
 	"fmt"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"log"
-	"myproject/project/internal/models"
+	"myproject/internal/models"
 	"time"
 )
 

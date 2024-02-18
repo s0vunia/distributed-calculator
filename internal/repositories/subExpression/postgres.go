@@ -9,7 +9,7 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"log"
-	"myproject/project/internal/models"
+	"myproject/internal/models"
 	"time"
 )
 

@@ -5,9 +5,8 @@ import (
 	"github.com/google/uuid"
 	"log"
 	"myproject/internal/config"
-	config2 "myproject/project/internal/config"
-	models2 "myproject/project/internal/models"
-	"myproject/project/internal/repositories/queue"
+	"myproject/internal/models"
+	"myproject/internal/repositories/queue"
 	"time"
 )
 
@@ -15,7 +14,7 @@ type IAgent interface {
 	// Start запускает агента
 	Start()
 	// CalculateExpression считает subexpression
-	CalculateExpression(task *models2.SubExpression)
+	CalculateExpression(task *models.SubExpression)
 	// StartHeartbeats отправка heartbeats
 	StartHeartbeats()
 }
@@ -53,16 +52,16 @@ func (a *Agent) Start() {
 
 	// обработка subexpressions из очереди
 	for task := range tasks {
-		expressionStruct := &models2.SubExpression{}
+		expressionStruct := &models.SubExpression{}
 		_ = json.Unmarshal(task, expressionStruct)
 
 		// формирование ответа оркестратору и том, что взяли subexpression на обработку
 		idAgent, _ := uuid.Parse(a.id)
-		rpcAnswer := models2.RPCAnswer{
+		rpcAnswer := models.RPCAnswer{
 			IdSubExpression: expressionStruct.Id,
 			IdAgent:         idAgent,
 		}
-		err := a.queueRepository.Connect(config2.NameQueueWithRPC)
+		err := a.queueRepository.Connect(config.NameQueueWithRPC)
 		if err != nil {
 			log.Printf("error connect to rpc queue")
 		}
@@ -81,14 +80,14 @@ func (a *Agent) Start() {
 	}
 }
 
-func (a *Agent) CalculateExpression(task *models2.SubExpression) {
+func (a *Agent) CalculateExpression(task *models.SubExpression) {
 	result, err := Calculate(task)
 	if err != nil {
 		task.Error = true
 	}
 	task.Result = result
 
-	err = a.queueRepository.Connect(config2.NameQueueWithFinishedTasks)
+	err = a.queueRepository.Connect(config.NameQueueWithFinishedTasks)
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v", err)
 	}
@@ -103,7 +102,7 @@ func (a *Agent) CalculateExpression(task *models2.SubExpression) {
 
 func (a *Agent) StartHeartbeats() {
 	// Открываем соединение один раз, а не на каждую итерацию
-	err := a.demonQueueRepository.Connect(config2.NameQueueWithHeartbeats)
+	err := a.demonQueueRepository.Connect(config.NameQueueWithHeartbeats)
 	if err != nil {
 		log.Fatalf("Failed to connect to queue: %v\n", err)
 	}
@@ -113,7 +112,7 @@ func (a *Agent) StartHeartbeats() {
 	defer ticker.Stop() // Остановить тикер, когда функция завершится
 
 	for range ticker.C {
-		agent := &models2.Agent{
+		agent := &models.Agent{
 			Id: a.id,
 		}
 		agentJson, err := json.Marshal(agent)

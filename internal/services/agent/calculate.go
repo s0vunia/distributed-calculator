@@ -2,8 +2,8 @@ package agent
 
 import (
 	"errors"
-	"myproject/project/internal/config"
-	"myproject/project/internal/models"
+	"myproject/internal/config"
+	"myproject/internal/models"
 	"time"
 )
 
