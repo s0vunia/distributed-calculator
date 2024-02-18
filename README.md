@@ -98,6 +98,11 @@ curl --location 'http://localhost:8080/expression' \
 --form 'expression="2+2/0"'
 ```
 
+``` 
+167935e7-0d86-4f72-991a-079944e3a529
+  ```
+
+когда подсчет будет на делении на ноль:
 ```json
 {
  "result": 0,
