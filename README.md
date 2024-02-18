@@ -23,7 +23,7 @@
 
 ## Примеры запросов
 
-1. 2+2*2 (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)
+__1. 2+2*2 (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)__
 
 ``` 
   curl --location 'http://localhost:8080/expression' \
@@ -51,7 +51,7 @@ curl --location 'http://localhost:8080/expression/a1fd5749-9855-4949-8129-c52bce
 }
 ```
 
-2. 2+(2*2) (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)
+__2. 2+(2*2) (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)__
 
 ``` 
 curl --location 'http://localhost:8080/expression' \
@@ -79,7 +79,7 @@ curl --location 'http://localhost:8080/expression/ad0e375d-0788-4eba-b120-124a4e
 }
 ```
 
-3. 2+(2*2)) (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)
+__3. 2+(2*2)) (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)__
 
 ```
 curl --location 'http://localhost:8080/expression' \
@@ -91,7 +91,7 @@ curl --location 'http://localhost:8080/expression' \
 Invalid expression
 ```
 
-4. 2+2/0 (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)
+__4. 2+2/0 (_обрати внимание на ключ идемпотентности X-Idempotency-Key, он должен отличаться для каждого примера_)__
 ```
 curl --location 'http://localhost:8080/expression' \
 --header 'X-Idempotency-Key: 4' \
