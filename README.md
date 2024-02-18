@@ -10,6 +10,13 @@
    с помощью docker-compose: docker-compose up --scale agent=3 -d --no-recreate --build  
    (вместо трех можно подставить любое число - столько агентов запустится)
 3. ждем пару минут (зависит от компьютера и интернет-соединения) пока не запустятся все компоненты системы
+
+## Доступные команды
+   * make build (docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build
+   * make scale любое_число_агентов (docker-compose --scale agent=любое_число_агентов)
+   * make rebuild (docker-compose down && docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build)
+   * make down (docker-compose down)
+   * make clean (docker-compose down --rmi all --volumes)
 ## Запросы
 
 * Быстрый импорт запросов с помощью [Postman](docs/Project.postman_collection.json)
