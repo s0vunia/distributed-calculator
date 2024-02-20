@@ -124,6 +124,13 @@ curl --location 'http://localhost:8080/expression' \
 }
 ```
 
+## Изменение таймаутов для операций (по умолчанию у всех операций 10 сек)
+В папке /internal/vars.go  
+TimeCalculatePlus "+"  
+TimeCalculateMinus "-"  
+TimeCalculateMult "*"   
+TimeCalculateDivide "/"
+
 ## Структура проекта
 Мой проект имеет [следующую папочную структуру](https://clck.ru/38tRth)
 
