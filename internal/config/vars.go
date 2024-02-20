@@ -11,7 +11,7 @@ var (
 	NameQueueWithHeartbeats    = "heartbeats"
 	CountOfAgents              = 1
 	CountOfGorutinsInAgent     = 10
-	TimeCalculatePlus          = time.Second * 5
+	TimeCalculatePlus          = time.Second * 10
 	TimeCalculateMinus         = time.Second * 10
 	TimeCalculateMult          = time.Second * 10
 	TimeCalculateDivide        = time.Second * 10
