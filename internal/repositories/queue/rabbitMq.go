@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var countOfReconnects = 10
+
 type RabbitMQRepository struct {
 	conn      *amqp.Connection
 	channel   *amqp.Channel
@@ -21,7 +23,19 @@ func NewRabbitMQRepository(url, queueName string) (*RabbitMQRepository, error) {
 		url: url,
 	}
 	repo.queueName = queueName
-	err := repo.Connect()
+	ticker := time.NewTicker(time.Second / 2)
+	var err error
+	count := 0
+	for _ = range ticker.C {
+		if count == countOfReconnects {
+			break
+		}
+		err = repo.Connect()
+		if err != nil {
+			continue
+		}
+		count++
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}

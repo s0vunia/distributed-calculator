@@ -1,8 +1,10 @@
 package orchestrator
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"path"
@@ -25,12 +27,14 @@ func EndpointExpression(orchestrator IOrchestrator) http.HandlerFunc {
 
 func CreateExpression(orchestrator IOrchestrator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		if r.Method != http.MethodPost {
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 			return
 		}
 
-		ctx := r.Context()
+		reqID := uuid.New().String()
+		ctx := context.WithValue(r.Context(), "req-id", reqID)
 
 		if err := r.ParseMultipartForm(10 << 20); err != nil { // Set maxMemory to 10 MB
 			http.Error(w, "Failed to parse form data", http.StatusBadRequest)
@@ -87,7 +91,8 @@ func GetExpression(orchestrator IOrchestrator) http.HandlerFunc {
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 			return
 		}
-		ctx := r.Context()
+		reqID := uuid.New().String()
+		ctx := context.WithValue(r.Context(), "req-id", reqID)
 
 		idPath := strings.TrimPrefix(r.URL.Path, "/expression/")
 		// Проверка, что idPath не пуст
@@ -117,7 +122,8 @@ func GetExpressions(orchestrator IOrchestrator) http.HandlerFunc {
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 			return
 		}
-		ctx := r.Context()
+		reqID := uuid.New().String()
+		ctx := context.WithValue(r.Context(), "req-id", reqID)
 
 		expressions, err := orchestrator.GetExpressions(ctx)
 		if err != nil || expressions == nil {
@@ -156,7 +162,8 @@ func GetSubExpressions(orchestrator IOrchestrator) http.HandlerFunc {
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 			return
 		}
-		ctx := r.Context()
+		reqID := uuid.New().String()
+		ctx := context.WithValue(r.Context(), "req-id", reqID)
 
 		expressions, err := orchestrator.GetSubExpressions(ctx)
 		if err != nil {
