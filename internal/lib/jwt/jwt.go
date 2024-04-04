@@ -1,9 +1,8 @@
 package jwt
 
 import (
+	"myproject/internal/models"
 	"time"
-
-	"grpc-service-ref/internal/domain/models"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -14,7 +13,7 @@ func NewToken(user models.User, app models.App, duration time.Duration) (string,
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["uid"] = user.ID
-	claims["email"] = user.Email
+	claims["login"] = user.Login
 	claims["exp"] = time.Now().Add(duration).Unix()
 	claims["app_id"] = app.ID
 

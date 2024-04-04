@@ -8,13 +8,17 @@ import (
 	"myproject/internal/app"
 	"myproject/internal/config"
 	"myproject/internal/repositories/agent"
+	appRepo "myproject/internal/repositories/app"
 	"myproject/internal/repositories/expression"
 	"myproject/internal/repositories/queue"
 	"myproject/internal/repositories/subExpression"
+	"myproject/internal/repositories/user"
+	"myproject/internal/services/auth"
 	"myproject/internal/services/orchestrator"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func init() {
@@ -68,20 +72,32 @@ func Start() {
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 	}
+	userRepository, err := user.NewPostgresRepository(dataSourceName)
+	if err != nil {
+		log.Fatalf("Failed to start queue: %v", err)
+	}
+	appRepository, err := appRepo.NewPostgresRepository(dataSourceName)
+	if err != nil {
+		log.Fatalf("Failed to start queue: %v", err)
+	}
 
 	ctx := context.Background()
-	newOrchestrator := orchestrator.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, expressionsQueueRepo,
-		calculationsQueueRepository, heartbeatsQueueRepository, rpcQueueRepository, agentRepo)
-
-	// Регистрация хендлеров
 	logSlog := slog.New(
 		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
 	)
-	application := app.New(logSlog, newOrchestrator, 8080)
+
+	newOrchestrator := orchestrator.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, expressionsQueueRepo,
+		calculationsQueueRepository, heartbeatsQueueRepository, rpcQueueRepository, agentRepo)
+	newAuth := auth.New(logSlog, userRepository, userRepository, appRepository, time.Hour*10)
+
+	// Регистрация хендлеров
+	application := app.New(logSlog, newOrchestrator, newAuth, 8080, 44044, time.Hour*10)
 	go func() {
 		application.ServerHTTP.MustRun()
 	}()
-
+	go func() {
+		application.GRPCServer.MustRun()
+	}()
 	// Graceful shutdown
 
 	stop := make(chan os.Signal, 1)
