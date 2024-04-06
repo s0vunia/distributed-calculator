@@ -71,3 +71,27 @@ func (s *serverAPI) Register(
 
 	return &authv1.RegisterResponse{UserId: uid}, nil
 }
+
+func (s *serverAPI) CreateExpression(
+	ctx context.Context,
+	in *authv1,
+) (*authv1.RegisterResponse, error) {
+	if in.Login == "" {
+		return nil, status.Error(codes.InvalidArgument, "login is required")
+	}
+
+	if in.Password == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	uid, err := s.auth.RegisterNewUser(ctx, in.GetLogin(), in.GetPassword())
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
+
+		return nil, status.Error(codes.Internal, "failed to register user")
+	}
+
+	return &authv1.RegisterResponse{UserId: uid}, nil
+}
