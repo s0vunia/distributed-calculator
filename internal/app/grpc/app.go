@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
+	"log"
 	"log/slog"
 	orchestratorgrpc "myproject/internal/grpc/orchestrator"
 	"myproject/internal/repositories/app"
@@ -24,11 +25,11 @@ import (
 
 var (
 	listOfRoutesJWTMiddleware = []string{
-		"auth.Orchestrator.CreateExpression",
-		"auth.Orchestrator.GetExpression",
-		"auth.Orchestrator.GetExpressions",
-		"auth.Orchestrator.GetAgents",
-		"auth.Orchestrator.GetOperators",
+		"/auth.Orchestrator/CreateExpression",
+		"/auth.Orchestrator/GetExpression",
+		"/auth.Orchestrator/GetExpressions",
+		"/auth.Orchestrator/GetAgents",
+		"/auth.Orchestrator/GetOperators",
 	}
 )
 
@@ -123,6 +124,7 @@ func (a *App) Stop() {
 
 func checkGrpcNameForJWT(ctx context.Context, callMeta interceptors.CallMeta) bool {
 	fullMethName := callMeta.FullMethod()
+	log.Printf(fullMethName)
 	for _, name := range listOfRoutesJWTMiddleware {
 		if name == fullMethName {
 			return true

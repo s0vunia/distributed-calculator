@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"myproject/internal/models"
 	"myproject/internal/repositories/app"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -38,16 +37,15 @@ func ProcessJWT(ctx context.Context, tokenString string, appRepo app.Repository)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
+	if !ok {
 		return fmt.Errorf("invalid JWT")
 	}
 
-	appID, ok := claims["app_id"].(string)
+	appID, ok := claims["app_id"].(float64)
 	if !ok {
 		return fmt.Errorf("app_id not found in JWT")
 	}
-	appIdString, err := strconv.Atoi(appID)
-	app, err := appRepo.App(ctx, appIdString)
+	app, err := appRepo.App(ctx, int(appID))
 	if err != nil {
 		return fmt.Errorf("failed to get app: %w", err)
 	}

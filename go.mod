@@ -9,7 +9,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/lib/pq v1.10.9
-	github.com/s0vunia/protos v0.0.0-20240407163105-6148d95abcd3
+	github.com/s0vunia/protos v0.0.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/streadway/amqp v1.1.0
 	golang.org/x/crypto v0.22.0
