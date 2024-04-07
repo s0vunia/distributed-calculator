@@ -3,7 +3,7 @@ package orchestratorgrpc
 import (
 	"context"
 	"errors"
-	authv1 "github.com/s0vunia/protos/gen/go/auth"
+	orchv1 "github.com/s0vunia/protos/gen/go/orchestrator"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,18 +12,18 @@ import (
 )
 
 type serverAPI struct {
-	authv1.UnimplementedAuthServer
+	orchv1.UnimplementedOrchestratorServer
 	orchestrator orchestrator.IOrchestrator
 }
 
 func Register(gRPCServer *grpc.Server, orchestrator orchestrator.IOrchestrator) {
-	authv1.RegisterAuthServer(gRPCServer, &serverAPI{orchestrator: orchestrator})
+	orchv1.RegisterOrchestratorServer(gRPCServer, &serverAPI{orchestrator: orchestrator})
 }
 
 func (s *serverAPI) CreateExpression(
 	ctx context.Context,
-	in *authv1.CreateExpressionRequest,
-) (*authv1.CreateExpressionResponse, error) {
+	in *orchv1.CreateExpressionRequest,
+) (*orchv1.CreateExpressionResponse, error) {
 	if in.Expression == "" {
 
 		return nil, status.Error(codes.InvalidArgument, "expression is required")
@@ -32,17 +32,27 @@ func (s *serverAPI) CreateExpression(
 
 		return nil, status.Error(codes.InvalidArgument, "idempotencyKey is required")
 	}
-	err, expressionId := s.orchestrator.CreateExpression(ctx, in.Expression, in.IdempotencyKey)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to create expression")
+
+	var expressionId string
+	expressionByKey, err := s.orchestrator.GetExpressionByKey(ctx, in.IdempotencyKey)
+	if expressionByKey != nil {
+		if err != nil {
+			return nil, status.Error(codes.Internal, "failed to create expression")
+		}
+		expressionId = expressionByKey.Id
+	} else {
+		err, expressionId = s.orchestrator.CreateExpression(ctx, in.Expression, in.IdempotencyKey)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "failed to create expression")
+		}
 	}
-	return &authv1.CreateExpressionResponse{ExpressionId: expressionId}, nil
+	return &orchv1.CreateExpressionResponse{ExpressionId: expressionId}, nil
 }
 
 func (s *serverAPI) GetExpression(
 	ctx context.Context,
-	in *authv1.GetExpressionRequest,
-) (*authv1.GetExpressionResponse, error) {
+	in *orchv1.GetExpressionRequest,
+) (*orchv1.GetExpressionResponse, error) {
 	if in.ExpressionId == "" {
 
 		return nil, status.Error(codes.InvalidArgument, "expressionId is required")
@@ -56,7 +66,7 @@ func (s *serverAPI) GetExpression(
 		return nil, status.Error(codes.Internal, "failed to get expression")
 	}
 
-	return &authv1.GetExpressionResponse{
+	return &orchv1.GetExpressionResponse{
 		Result:         float32(expression.Result),
 		ExpressionId:   expression.Id,
 		IdempotencyKey: expression.IdempotencyKey,
