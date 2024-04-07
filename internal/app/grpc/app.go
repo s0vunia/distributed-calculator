@@ -3,7 +3,12 @@ package grpcapp
 import (
 	"context"
 	"fmt"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"log/slog"
+	orchestratorgrpc "myproject/internal/grpc/orchestrator"
+	"myproject/internal/repositories/app"
+	"myproject/internal/services/orchestrator"
 	"net"
 
 	authgrpc "myproject/internal/grpc/auth"
@@ -11,9 +16,20 @@ import (
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+var (
+	listOfRoutesJWTMiddleware = []string{
+		"auth.Orchestrator.CreateExpression",
+		"auth.Orchestrator.GetExpression",
+		"auth.Orchestrator.GetExpressions",
+		"auth.Orchestrator.GetAgents",
+		"auth.Orchestrator.GetOperators",
+	}
 )
 
 type App struct {
@@ -26,6 +42,8 @@ type App struct {
 func New(
 	log *slog.Logger,
 	authService authService.IOAuth,
+	orchestratorService orchestrator.IOrchestrator,
+	appRepo app.Repository,
 	port int,
 ) *App {
 	loggingOpts := []logging.Option{
@@ -47,9 +65,11 @@ func New(
 	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
+		selector.UnaryServerInterceptor(authgrpc.JWTMiddleware(appRepo), selector.MatchFunc(checkGrpcNameForJWT)),
 	))
 
 	authgrpc.Register(gRPCServer, authService)
+	orchestratorgrpc.Register(gRPCServer, orchestratorService)
 
 	return &App{
 		log:        log,
@@ -99,4 +119,14 @@ func (a *App) Stop() {
 		Info("stopping gRPC server", slog.Int("port", a.port))
 
 	a.gRPCServer.GracefulStop()
+}
+
+func checkGrpcNameForJWT(ctx context.Context, callMeta interceptors.CallMeta) bool {
+	fullMethName := callMeta.FullMethod()
+	for _, name := range listOfRoutesJWTMiddleware {
+		if name == fullMethName {
+			return true
+		}
+	}
+	return false
 }

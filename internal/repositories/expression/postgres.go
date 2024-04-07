@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"myproject/internal/models"
+	"myproject/internal/repositories"
 )
 
 type PostgresRepository struct {
@@ -78,12 +79,14 @@ func (r *PostgresRepository) GetExpressions(ctx context.Context) ([]*models.Expr
 }
 
 func (r *PostgresRepository) GetExpressionById(ctx context.Context, id string) (*models.Expression, error) {
+	const op = "repositories.postgres.GetExpressionById"
+
 	row := r.db.QueryRowContext(ctx, "SELECT id, idempotency_key, value, state, result FROM expressions WHERE id=$1", id)
 	var expr models.Expression
 	var result sql.NullFloat64
 	if err := row.Scan(&expr.Id, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, fmt.Errorf("%s: %w", op, repositories.ErrExpressionNotFound)
 		}
 		return nil, err
 	}

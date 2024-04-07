@@ -91,7 +91,7 @@ func Start() {
 	newAuth := auth.New(logSlog, userRepository, userRepository, appRepository, time.Hour*10)
 
 	// Регистрация хендлеров
-	application := app.New(logSlog, newOrchestrator, newAuth, 8080, 44044, time.Hour*10)
+	application := app.New(logSlog, newOrchestrator, appRepository, newAuth, 8080, 44044, time.Hour*10)
 	go func() {
 		application.ServerHTTP.MustRun()
 	}()
