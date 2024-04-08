@@ -7,8 +7,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"myproject/internal/models"
 	"myproject/internal/repositories"
 	"myproject/internal/services/orchestrator"
+	"myproject/internal/services/orchestrator/utils"
 )
 
 type serverAPI struct {
@@ -66,11 +68,71 @@ func (s *serverAPI) GetExpression(
 		return nil, status.Error(codes.Internal, "failed to get expression")
 	}
 
+	return s.ExpressionModelToGetExpressionResponse(expression), nil
+}
+
+func (s *serverAPI) ExpressionModelToGetExpressionResponse(expression *models.Expression) *orchv1.GetExpressionResponse {
 	return &orchv1.GetExpressionResponse{
 		Result:         float32(expression.Result),
 		ExpressionId:   expression.Id,
 		IdempotencyKey: expression.IdempotencyKey,
 		Value:          expression.Value,
 		State:          string(expression.State),
-	}, nil
+	}
+}
+
+func (s *serverAPI) GetExpressions(
+	ctx context.Context,
+	in *orchv1.GetExpressionsRequest,
+) (*orchv1.GetExpressionsResponse, error) {
+	expressions, err := s.orchestrator.GetExpressions(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to get expressions")
+	}
+	var listOfExpression []*orchv1.GetExpressionResponse
+	for _, expression := range expressions {
+		listOfExpression = append(listOfExpression, s.ExpressionModelToGetExpressionResponse(expression))
+	}
+	return &orchv1.GetExpressionsResponse{ListOfExpressions: listOfExpression}, nil
+}
+
+func (s *serverAPI) GetAgents(
+	ctx context.Context,
+	in *orchv1.GetAgentsRequest,
+) (*orchv1.GetAgentsResponse, error) {
+	agents, err := s.orchestrator.GetAgents()
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to get agents")
+	}
+	var listOfAgents []*orchv1.GetAgentResponse
+	for _, agent := range agents {
+		listOfAgents = append(listOfAgents, s.AgentModelToGetAgentResponse(agent))
+	}
+	return &orchv1.GetAgentsResponse{ListOfAgents: listOfAgents}, nil
+}
+
+func (s *serverAPI) AgentModelToGetAgentResponse(agent *models.Agent) *orchv1.GetAgentResponse {
+	return &orchv1.GetAgentResponse{
+		Id:        agent.Id,
+		Heartbeat: float64(agent.Heartbeat),
+	}
+}
+
+func (s *serverAPI) GetOperators(
+	ctx context.Context,
+	in *orchv1.GetOperatorsRequest,
+) (*orchv1.GetOperatorsResponse, error) {
+	operators := orchestratorutils.GetOperators()
+	var listOfOperators []*orchv1.GetOperatorResponse
+	for _, operator := range operators {
+		listOfOperators = append(listOfOperators, s.OperatorModelToGetOperatorResponse(operator))
+	}
+	return &orchv1.GetOperatorsResponse{ListOfOperators: listOfOperators}, nil
+}
+
+func (s *serverAPI) OperatorModelToGetOperatorResponse(operator *models.Operator) *orchv1.GetOperatorResponse {
+	return &orchv1.GetOperatorResponse{
+		Op:      operator.Op,
+		Timeout: int64(operator.Timeout),
+	}
 }
