@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"log"
+	"myproject/internal/services/orchestrator/utils"
 	"net/http"
 	"path"
 	"strings"
@@ -187,8 +188,7 @@ func GetOperators(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	operators := getOperators()
-	log.Println(operators)
+	operators := orchestratorutils.GetOperators()
 
 	jsonData, err := json.MarshalIndent(operators, "", "  ")
 	if err != nil {
