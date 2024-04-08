@@ -25,11 +25,11 @@ import (
 
 var (
 	listOfRoutesJWTMiddleware = []string{
-		"/auth.Orchestrator/CreateExpression",
-		"/auth.Orchestrator/GetExpression",
-		"/auth.Orchestrator/GetExpressions",
-		"/auth.Orchestrator/GetAgents",
-		"/auth.Orchestrator/GetOperators",
+		"/orchestrator.Orchestrator/CreateExpression",
+		"/orchestrator.Orchestrator/GetExpression",
+		"/orchestrator.Orchestrator/GetExpressions",
+		"/orchestrator.Orchestrator/GetAgents",
+		"/orchestrator.Orchestrator/GetOperators",
 	}
 )
 
