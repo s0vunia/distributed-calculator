@@ -3,9 +3,9 @@ package models
 type ExpressionState string
 
 const (
-	Error      ExpressionState = "error"
-	InProgress                 = "in_progress"
-	Ok                         = "ok"
+	ExpressionError      ExpressionState = "error"
+	ExpressionInProgress                 = "in_progress"
+	ExpressionOk                         = "ok"
 )
 
 type Expression struct {
