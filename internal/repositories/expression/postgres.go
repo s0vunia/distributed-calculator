@@ -35,7 +35,7 @@ func (r *PostgresRepository) CreateExpression(ctx context.Context, s, idempotenc
 	expression := &models.Expression{
 		IdempotencyKey: idempotencyId,
 		Value:          s,
-		State:          models.ExpressionState(models.InProgress),
+		State:          models.ExpressionState(models.ExpressionInProgress),
 	}
 
 	err := r.db.QueryRowContext(ctx, "INSERT INTO expressions (id, idempotency_key, value, state) VALUES (gen_random_uuid(), $1, $2, $3) RETURNING id",
@@ -126,7 +126,7 @@ func (r *PostgresRepository) UpdateExpression(ctx context.Context, expression *m
 
 func (r *PostgresRepository) UpdateExpressionById(ctx context.Context, id uuid.UUID, result float64) error {
 	_, err := r.db.ExecContext(ctx, "UPDATE expressions SET result=$1, state=$3 WHERE id=$2",
-		result, id, models.ExpressionState(models.Ok))
+		result, id, models.ExpressionState(models.ExpressionOk))
 	return err
 }
 

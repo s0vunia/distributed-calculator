@@ -12,6 +12,7 @@ import (
 	"myproject/internal/repositories/expression"
 	"myproject/internal/repositories/queue"
 	"myproject/internal/repositories/subExpression"
+	"myproject/internal/services/orchestrator/utils"
 	"time"
 )
 
@@ -75,7 +76,7 @@ func (o *Orchestrator) CreateExpression(ctx context.Context, expression, idempot
 	if err != nil {
 		return err, ""
 	}
-	_, err = splitToSubtasks(ctx, createdExpression, o.subExpressionRepository)
+	_, err = orchestratorutils.SplitToSubtasks(ctx, createdExpression, o.subExpressionRepository)
 	if err != nil {
 		exprId, _ := uuid.Parse(createdExpression.Id)
 		o.subExpressionRepository.DeleteSubExpressionsByExpressionId(ctx, exprId)
@@ -149,7 +150,7 @@ func (o *Orchestrator) ReceiveCalculations(ctx context.Context) {
 			if err != nil {
 				log.Printf("error delete subexpressions: %e", err)
 			}
-			err = o.expressionRepository.UpdateState(ctx, expressionStruct.ExpressionId.String(), models.ExpressionState(models.Error))
+			err = o.expressionRepository.UpdateState(ctx, expressionStruct.ExpressionId.String(), models.ExpressionError)
 			if err != nil {
 				log.Printf("error update state: %e", err)
 			}
