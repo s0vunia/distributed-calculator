@@ -1,4 +1,4 @@
-package orchestrator
+package orchestratorutils
 
 import (
 	"context"
@@ -12,8 +12,13 @@ import (
 	"strings"
 )
 
-// splitToSubtasks делать полное арифметическое выражение на подзадачи
-func splitToSubtasks(ctx context.Context, expr *models.Expression, subExpressionRepo subExpression.Repository) (tasks []*models.SubExpression, err error) {
+//go:generate go run github.com/vektra/mockery/v2@v2.42.2 --name=SplitToSubtasks
+type SplitterToSubtasks interface {
+	SplitToSubtasks(ctx context.Context, expr *models.Expression, subExpressionRepo subExpression.Repository) (tasks []*models.SubExpression, err error)
+}
+
+// SplitToSubtasks делает полное арифметическое выражение на подзадачи
+func SplitToSubtasks(ctx context.Context, expr *models.Expression, subExpressionRepo subExpression.Repository) (tasks []*models.SubExpression, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -84,7 +89,7 @@ func splitToSubtasks(ctx context.Context, expr *models.Expression, subExpression
 	}
 
 	// Разделяем входное выражение на элементы.
-	elements := strings.Fields(infixToPostfix(expr.Value))
+	elements := strings.Fields(InfixToPostfix(expr.Value))
 
 	for i, element := range elements {
 		switch element {

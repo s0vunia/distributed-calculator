@@ -1,4 +1,4 @@
-package orchestrator
+package orchestratorutils
 
 import (
 	"bytes"
@@ -45,8 +45,8 @@ func precedence(op string) int {
 	return 0
 }
 
-// infixToPostfix преобразование инфиксной записи в постфиксную
-func infixToPostfix(expression string) string {
+// InfixToPostfix преобразование инфиксной записи в постфиксную
+func InfixToPostfix(expression string) string {
 	var result bytes.Buffer
 	var stack Stack
 

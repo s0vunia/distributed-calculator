@@ -56,7 +56,7 @@ func CreateExpression(orchestrator IOrchestrator) http.HandlerFunc {
 			return
 		}
 
-		if !validateExpression(expression) {
+		if !orchestratorutils.ValidateExpression(expression) {
 			http.Error(w, "Invalid expression", http.StatusBadRequest)
 			return
 		}
