@@ -32,7 +32,7 @@ func NewPostgresRepository(dataSourceName string) (*PostgresRepository, error) {
 func (p *PostgresRepository) Create(s string) error {
 	err := p.db.QueryRow("INSERT INTO agents (id) VALUES ($1)", s)
 	if err != nil {
-		return fmt.Errorf("create agent failure %e", err)
+		return fmt.Errorf("create agent failure %v", err)
 	}
 	return nil
 }
