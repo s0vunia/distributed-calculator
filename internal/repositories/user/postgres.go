@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/lib/pq"
 	"myproject/internal/models"
 	"myproject/internal/repositories"
 )
@@ -35,7 +35,7 @@ func (p *PostgresRepository) Create(ctx context.Context, login string, passHash 
 	var lastInsertId int64
 	err := p.db.QueryRowContext(ctx, "INSERT INTO users(login, pass_hash) VALUES ($1, $2) RETURNING id", login, string(passHash)).Scan(&lastInsertId)
 	if err != nil {
-		var pqErr *pq.Error
+		var pqErr *pgconn.PgError
 		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
 			return 0, fmt.Errorf("%s: %w", op, repositories.ErrUserExists)
 		}
