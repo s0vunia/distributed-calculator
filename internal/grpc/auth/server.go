@@ -61,7 +61,7 @@ func (s *serverAPI) Register(
 
 	uid, err := s.auth.RegisterNewUser(ctx, in.GetLogin(), in.GetPassword())
 	if err != nil {
-		if errors.Is(err, repositories.ErrUserNotFound) {
+		if errors.Is(err, repositories.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
 
