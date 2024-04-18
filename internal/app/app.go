@@ -26,7 +26,7 @@ func New(
 	timeouts config.CalculationTimeoutsConfig,
 	tokenTTL time.Duration,
 ) *App {
-	serverHTTP := httpapp.New(log, orchestrator, httpPort)
+	serverHTTP := httpapp.New(log, orchestrator, httpPort, timeouts)
 	grpcServer := grpcapp.New(log, auth, orchestrator, appRepo, grpcPort, timeouts)
 	return &App{
 		ServerHTTP: serverHTTP,

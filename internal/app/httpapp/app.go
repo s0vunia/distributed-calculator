@@ -4,6 +4,7 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	"log/slog"
+	"myproject/internal/config"
 	"myproject/internal/services/orchestrator"
 	"net/http"
 	"strconv"
@@ -14,6 +15,7 @@ type ServerHTTP struct {
 	log          *slog.Logger
 	orchestrator orchestrator.IOrchestrator
 	port         int
+	timeouts     config.CalculationTimeoutsConfig
 }
 
 // New creates new gRPC server app.
@@ -21,6 +23,7 @@ func New(
 	log *slog.Logger,
 	orchestrator orchestrator.IOrchestrator,
 	port int,
+	timeouts config.CalculationTimeoutsConfig,
 ) *ServerHTTP {
 
 	server := &http.Server{Addr: ":" + strconv.Itoa(port)}
@@ -30,6 +33,7 @@ func New(
 		log:          log,
 		orchestrator: orchestrator,
 		port:         port,
+		timeouts:     timeouts,
 	}
 }
 
@@ -60,7 +64,7 @@ func (a *ServerHTTP) Routing() *http.ServeMux {
 	mux.HandleFunc("/api/v0/expressions", orchestrator.GetExpressions(a.orchestrator))
 	mux.HandleFunc("/api/v0/sub_expressions", orchestrator.GetSubExpressions(a.orchestrator))
 	mux.HandleFunc("/api/v0/agents", orchestrator.GetAgents(a.orchestrator))
-	mux.HandleFunc("/api/v0/operators", orchestrator.GetOperators)
+	mux.HandleFunc("/api/v0/operators", orchestrator.GetOperators(a.timeouts))
 	return mux
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"log"
+	"myproject/internal/config"
 	"myproject/internal/services/orchestrator/utils"
 	"net/http"
 	"path"
@@ -183,17 +184,19 @@ func GetSubExpressions(orchestrator IOrchestrator) http.HandlerFunc {
 	}
 }
 
-func GetOperators(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-	operators := orchestratorutils.GetOperators()
+func GetOperators(timeouts config.CalculationTimeoutsConfig) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+			return
+		}
+		operators := orchestratorutils.GetOperators(timeouts)
 
-	jsonData, err := json.MarshalIndent(operators, "", "  ")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		jsonData, err := json.MarshalIndent(operators, "", "  ")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprint(w, string(jsonData))
 	}
-	fmt.Fprint(w, string(jsonData))
 }

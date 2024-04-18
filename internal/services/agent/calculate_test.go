@@ -1,11 +1,13 @@
 package agent
 
 import (
+	"myproject/internal/config"
 	"myproject/internal/models"
 	"testing"
 )
 
 func TestCalculate(t *testing.T) {
+	cfg := config.MustLoadPath("../../config/local_tests.yaml")
 	type args struct {
 		expression *models.SubExpression
 	}
@@ -102,7 +104,7 @@ func TestCalculate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAns, err := Calculate(tt.args.expression)
+			gotAns, err := Calculate(tt.args.expression, cfg.CalculationTimeouts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Calculate() error = %v, wantErr %v", err, tt.wantErr)
 				return
