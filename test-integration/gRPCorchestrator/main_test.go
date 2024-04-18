@@ -16,7 +16,7 @@ type exprRes struct {
 func TestMain(m *testing.M) {
 	agents := 3
 	cmd := exec.Command("make", "up", fmt.Sprintf("AGENTS=%d", agents))
-	cmd.Dir = "../"
+	cmd.Dir = "../../"
 	cmd.Run()
 	os.Exit(m.Run())
 }

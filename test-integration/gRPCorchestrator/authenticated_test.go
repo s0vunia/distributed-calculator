@@ -17,6 +17,8 @@ import (
 )
 
 func TestGRPCServiceAuthenticated(t *testing.T) {
+	cfg := config.MustLoadPath("../../config/local_tests.yaml")
+
 	conn, err := grpc.Dial("localhost:44044", grpc.WithInsecure())
 	defer conn.Close()
 	assert.NoError(t, err)
@@ -49,19 +51,19 @@ func TestGRPCServiceAuthenticated(t *testing.T) {
 
 	expressions := map[string]exprRes{
 		"2+2*2": {
-			timeout: config.TimeCalculatePlus + config.TimeCalculateMult + time.Second*2,
+			timeout: cfg.CalculationTimeouts.TimeCalculatePlus + cfg.CalculationTimeouts.TimeCalculateMult + time.Second*2,
 			res:     6,
 		},
 		"(2+2)*2": {
-			timeout: config.TimeCalculatePlus + config.TimeCalculateMult + time.Second*2,
+			timeout: cfg.CalculationTimeouts.TimeCalculatePlus + cfg.CalculationTimeouts.TimeCalculateMult + time.Second*2,
 			res:     8,
 		},
 		"6*6*5": {
-			timeout: 3*config.TimeCalculateMult + time.Second*2,
+			timeout: 3*cfg.CalculationTimeouts.TimeCalculateMult + time.Second*2,
 			res:     180,
 		},
 		"(380-54)/2": {
-			timeout: config.TimeCalculateDivide + config.TimeCalculateMinus + time.Second*2,
+			timeout: cfg.CalculationTimeouts.TimeCalculateDivide + cfg.CalculationTimeouts.TimeCalculateMinus + time.Second*2,
 			res:     163,
 		},
 	}
