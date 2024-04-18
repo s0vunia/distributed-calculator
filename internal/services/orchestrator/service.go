@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"log"
-	"myproject/internal/config"
 	"myproject/internal/models"
 	"myproject/internal/repositories/agent"
 	"myproject/internal/repositories/expression"
@@ -45,6 +44,7 @@ type Orchestrator struct {
 	calculationsQueueRepository queue.Repository
 	heartbeatsQueueRepository   queue.Repository
 	rpcQueueRepository          queue.Repository
+	retrySubExpressionTimout    time.Duration
 }
 
 func NewOrchestrator(ctx context.Context, expressionRepo expression.Repository,
@@ -53,7 +53,8 @@ func NewOrchestrator(ctx context.Context, expressionRepo expression.Repository,
 	calculationsQueueRepository queue.Repository,
 	heartbeatsQueueRepository queue.Repository,
 	rpcQueueRepository queue.Repository,
-	agentRepo agent.Repository) *Orchestrator {
+	agentRepo agent.Repository,
+	retrySubExpressionTimout time.Duration) *Orchestrator {
 	orch := &Orchestrator{
 		expressionRepository:        expressionRepo,
 		subExpressionRepository:     subExpressionRepo,
@@ -62,6 +63,7 @@ func NewOrchestrator(ctx context.Context, expressionRepo expression.Repository,
 		calculationsQueueRepository: calculationsQueueRepository,
 		heartbeatsQueueRepository:   heartbeatsQueueRepository,
 		rpcQueueRepository:          rpcQueueRepository,
+		retrySubExpressionTimout:    retrySubExpressionTimout,
 	}
 	go orch.SendSubExpression()
 	go orch.ReceiveHeartbeats()
@@ -227,8 +229,8 @@ func (o *Orchestrator) RetrySubExpressions(ctx context.Context) {
 		agents, _ := o.agentRepository.GetAgents()
 		for _, agent := range agents {
 			timeAgent := time.Unix(agent.Heartbeat, 0)
-			// Если от агента не поступает ответа в течение config.RetrySubExpressionTimout
-			if time.Now().Add(-config.RetrySubExpressionTimout).After(timeAgent) {
+			// Если от агента не поступает ответа в течение retrySubExpressionTimout
+			if time.Now().Add(-o.retrySubExpressionTimout).After(timeAgent) {
 				agentId, _ := uuid.Parse(agent.Id)
 				// получаем все невыполненные subexpression этого агента
 				tempExpressions, err := o.subExpressionRepository.GetNotCalculatedSubExpressionsByAgentId(ctx, agentId)

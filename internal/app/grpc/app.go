@@ -7,6 +7,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"log"
 	"log/slog"
+	"myproject/internal/config"
 	orchestratorgrpc "myproject/internal/grpc/orchestrator"
 	"myproject/internal/repositories/app"
 	"myproject/internal/services/orchestrator"
@@ -46,6 +47,7 @@ func New(
 	orchestratorService orchestrator.IOrchestrator,
 	appRepo app.Repository,
 	port int,
+	timeouts config.CalculationTimeoutsConfig,
 ) *App {
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
@@ -70,7 +72,7 @@ func New(
 	))
 
 	authgrpc.Register(gRPCServer, authService)
-	orchestratorgrpc.Register(gRPCServer, orchestratorService)
+	orchestratorgrpc.Register(gRPCServer, orchestratorService, timeouts)
 
 	return &App{
 		log:        log,

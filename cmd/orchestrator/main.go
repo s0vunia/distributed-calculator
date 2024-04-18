@@ -18,7 +18,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 func init() {
@@ -38,8 +37,9 @@ func init() {
 
 // Start инициализирует и запускает оркестратор
 func Start() {
+	cfg := config.MustLoad()
 	dataSourceName := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
-		"postgres", "5432", "testttdb", "testttuser", "testttpass")
+		cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.DbName, cfg.Postgres.User, cfg.Postgres.Password)
 	expressionRepo, err := expression.NewPostgresRepository(dataSourceName)
 	if err != nil {
 		log.Fatalf("Failed to connect postgres: %v", err)
@@ -56,19 +56,19 @@ func Start() {
 		return
 	}
 
-	expressionsQueueRepo, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithTasks)
+	expressionsQueueRepo, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithTasks)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 	}
-	calculationsQueueRepository, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithFinishedTasks)
+	calculationsQueueRepository, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithFinishedTasks)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 	}
-	heartbeatsQueueRepository, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithHeartbeats)
+	heartbeatsQueueRepository, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithHeartbeats)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 	}
-	rpcQueueRepository, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithRPC)
+	rpcQueueRepository, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithRPC)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 	}
@@ -87,11 +87,11 @@ func Start() {
 	)
 
 	newOrchestrator := orchestrator.NewOrchestrator(ctx, expressionRepo, subExpressionRepo, expressionsQueueRepo,
-		calculationsQueueRepository, heartbeatsQueueRepository, rpcQueueRepository, agentRepo)
-	newAuth := auth.New(logSlog, userRepository, userRepository, appRepository, time.Hour*10)
+		calculationsQueueRepository, heartbeatsQueueRepository, rpcQueueRepository, agentRepo, cfg.RetrySubExpressionTimout)
+	newAuth := auth.New(logSlog, userRepository, userRepository, appRepository, cfg.TokenTTL)
 
 	// Регистрация хендлеров
-	application := app.New(logSlog, newOrchestrator, appRepository, newAuth, 8080, 44044, time.Hour*10)
+	application := app.New(logSlog, newOrchestrator, appRepository, newAuth, cfg.HTTP.Port, cfg.GRPC.Port, cfg.CalculationTimeouts, cfg.TokenTTL)
 	go func() {
 		application.ServerHTTP.MustRun()
 	}()

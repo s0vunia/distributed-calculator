@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"log"
+	"myproject/internal/config"
 	"myproject/internal/models"
 	"myproject/internal/repositories/queue"
 	"time"
@@ -24,9 +25,11 @@ type Agent struct {
 	calculationQueueRepository queue.Repository
 	heartbeatQueueRepository   queue.Repository
 	rpcQueueRepository         queue.Repository
+	calculationTimeouts        config.CalculationTimeoutsConfig
 }
 
-func NewAgent(expressionQueueRepo, calculationQueueRepo, heartbeatQueueRepo, rpcQueueRepo queue.Repository) *Agent {
+func NewAgent(expressionQueueRepo, calculationQueueRepo, heartbeatQueueRepo, rpcQueueRepo queue.Repository,
+	timeouts config.CalculationTimeoutsConfig) *Agent {
 	id := uuid.NewString()
 	return &Agent{
 		id:                         id,
@@ -34,6 +37,7 @@ func NewAgent(expressionQueueRepo, calculationQueueRepo, heartbeatQueueRepo, rpc
 		calculationQueueRepository: calculationQueueRepo,
 		heartbeatQueueRepository:   heartbeatQueueRepo,
 		rpcQueueRepository:         rpcQueueRepo,
+		calculationTimeouts:        timeouts,
 	}
 }
 
@@ -84,7 +88,7 @@ func (a *Agent) Start() {
 }
 
 func (a *Agent) CalculateExpression(task *models.SubExpression) {
-	result, err := Calculate(task)
+	result, err := Calculate(task, a.calculationTimeouts)
 	if err != nil {
 		task.Error = true
 	}

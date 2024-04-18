@@ -25,28 +25,29 @@ func init() {
 
 // Start инициализирует и запускате агента
 func Start() {
-	expressionsQueueRepo, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithTasks)
+	cfg := config.MustLoad()
+	expressionsQueueRepo, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithTasks)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 		return
 	}
 
-	calculationQueueRepo, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithFinishedTasks)
+	calculationQueueRepo, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithFinishedTasks)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 		return
 	}
-	heartbeatQueueRepo, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithHeartbeats)
+	heartbeatQueueRepo, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithHeartbeats)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 		return
 	}
-	rpcQueueRepo, err := queue.NewRabbitMQRepository(config.UrlRabbit, config.NameQueueWithRPC)
+	rpcQueueRepo, err := queue.NewRabbitMQRepository(cfg.UrlRabbit, cfg.Queue.NameQueueWithRPC)
 	if err != nil {
 		log.Fatalf("Failed to start queue: %v", err)
 		return
 	}
-	a := agent.NewAgent(expressionsQueueRepo, calculationQueueRepo, heartbeatQueueRepo, rpcQueueRepo)
+	a := agent.NewAgent(expressionsQueueRepo, calculationQueueRepo, heartbeatQueueRepo, rpcQueueRepo, cfg.CalculationTimeouts)
 	a.Start()
 }
 

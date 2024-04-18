@@ -21,7 +21,7 @@ services:
     volumes:
       - ./data/migrations/:/docker-entrypoint-initdb.d/
       - ./data/postgres/:/var/lib/postgresql/data
-    command: ["postgres", "-c", "log_statement=all"]
+    command: [ "postgres", "-c", "log_statement=all" ]
     ports:
       - "5432:5432"
 
@@ -36,12 +36,8 @@ services:
       - rabbitmq
       - postgres
     environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
-      RABBITMQ_VHOST: '/'
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
       DATABASE_URL: postgres://testttuser:testttpass@postgres:5432/testttdb?sslmode=disable
+      CONFIG_PATH: ./config/config.yaml
     ports:
       - '8080:8080'
       - '44044:44044'

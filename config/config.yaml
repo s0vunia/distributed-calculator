@@ -1,0 +1,23 @@
+env: "local"
+url_rabbit: "amqp://guest:guest@rabbitmq/"
+queue:
+  name_queue_with_tasks: "tasks"
+  name_queue_with_finished_tasks: "finished_tasks"
+  name_queue_with_heartbeats: "heartbeats"
+  name_queue_with_rpc: "tasks_rpc"
+calculation_timeouts:
+  time_calculate_plus: 5s
+  time_calculate_minus: 5s
+  time_calculate_mult: 5s
+  time_calculate_divide: 5s
+grpc:
+  port: 44044
+  timeout: 5s
+http:
+  port: 8080
+postgres:
+  host: postgres
+  port: 5432
+  db_name: testttdb
+  user: testttuser
+  password: testttpass

@@ -7,12 +7,12 @@ import (
 )
 
 // GetOperators возвращает список операция
-func GetOperators() []*models.Operator {
+func GetOperators(timeouts config.CalculationTimeoutsConfig) []*models.Operator {
 	operatorsMap := map[string]time.Duration{
-		"+": config.TimeCalculatePlus / time.Second,
-		"-": config.TimeCalculateMinus / time.Second,
-		"*": config.TimeCalculateMult / time.Second,
-		"/": config.TimeCalculateDivide / time.Second,
+		"+": timeouts.TimeCalculatePlus / time.Second,
+		"-": timeouts.TimeCalculateMinus / time.Second,
+		"*": timeouts.TimeCalculateMult / time.Second,
+		"/": timeouts.TimeCalculateDivide / time.Second,
 	}
 	var operators []*models.Operator
 	for key, value := range operatorsMap {

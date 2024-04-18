@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"myproject/internal/config"
 	"myproject/internal/models"
 	"myproject/internal/repositories"
 	"myproject/internal/services/orchestrator"
@@ -15,11 +16,12 @@ import (
 
 type serverAPI struct {
 	orchv1.UnimplementedOrchestratorServer
-	orchestrator orchestrator.IOrchestrator
+	orchestrator        orchestrator.IOrchestrator
+	calculationTimeouts config.CalculationTimeoutsConfig
 }
 
-func Register(gRPCServer *grpc.Server, orchestrator orchestrator.IOrchestrator) {
-	orchv1.RegisterOrchestratorServer(gRPCServer, &serverAPI{orchestrator: orchestrator})
+func Register(gRPCServer *grpc.Server, orchestrator orchestrator.IOrchestrator, timeoutsConfig config.CalculationTimeoutsConfig) {
+	orchv1.RegisterOrchestratorServer(gRPCServer, &serverAPI{orchestrator: orchestrator, calculationTimeouts: timeoutsConfig})
 }
 
 func (s *serverAPI) CreateExpression(
@@ -122,7 +124,7 @@ func (s *serverAPI) GetOperators(
 	ctx context.Context,
 	in *orchv1.GetOperatorsRequest,
 ) (*orchv1.GetOperatorsResponse, error) {
-	operators := orchestratorutils.GetOperators()
+	operators := orchestratorutils.GetOperators(s.calculationTimeouts)
 	var listOfOperators []*orchv1.GetOperatorResponse
 	for _, operator := range operators {
 		listOfOperators = append(listOfOperators, s.OperatorModelToGetOperatorResponse(operator))

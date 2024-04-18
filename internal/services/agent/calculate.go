@@ -8,7 +8,7 @@ import (
 )
 
 // Calculate считает subexpression с паузой из config
-func Calculate(expression *models.SubExpression) (ans float64, err error) {
+func Calculate(expression *models.SubExpression, timeouts config.CalculationTimeoutsConfig) (ans float64, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -24,19 +24,19 @@ func Calculate(expression *models.SubExpression) (ans float64, err error) {
 	}()
 	switch expression.Action {
 	case "+":
-		<-time.After(config.TimeCalculatePlus)
+		<-time.After(timeouts.TimeCalculatePlus)
 		return expression.Val1 + expression.Val2, nil
 	case "-":
-		<-time.After(config.TimeCalculateMinus)
+		<-time.After(timeouts.TimeCalculateMinus)
 		return expression.Val1 - expression.Val2, nil
 	case "*":
-		<-time.After(config.TimeCalculateMult)
+		<-time.After(timeouts.TimeCalculateMult)
 		return expression.Val1 * expression.Val2, nil
 	case "/":
 		if expression.Val2 == 0 {
 			return 0, errors.New("cannot divide by zero")
 		}
-		<-time.After(config.TimeCalculateDivide)
+		<-time.After(timeouts.TimeCalculateDivide)
 		return expression.Val1 / expression.Val2, nil
 	default:
 		err = errors.New("not allowed action")

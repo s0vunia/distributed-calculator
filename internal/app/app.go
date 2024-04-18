@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	grpcapp "myproject/internal/app/grpc"
 	"myproject/internal/app/httpapp"
+	"myproject/internal/config"
 	"myproject/internal/repositories/app"
 	"myproject/internal/services/auth"
 	"myproject/internal/services/orchestrator"
@@ -22,10 +23,11 @@ func New(
 	auth auth.IOAuth,
 	httpPort int,
 	grpcPort int,
+	timeouts config.CalculationTimeoutsConfig,
 	tokenTTL time.Duration,
 ) *App {
 	serverHTTP := httpapp.New(log, orchestrator, httpPort)
-	grpcServer := grpcapp.New(log, auth, orchestrator, appRepo, grpcPort)
+	grpcServer := grpcapp.New(log, auth, orchestrator, appRepo, grpcPort, timeouts)
 	return &App{
 		ServerHTTP: serverHTTP,
 		GRPCServer: grpcServer,
