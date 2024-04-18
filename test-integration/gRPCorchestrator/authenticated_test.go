@@ -42,11 +42,11 @@ func TestGRPCServiceAuthenticated(t *testing.T) {
 	assert.NoError(t, err)
 	token := loginResponse.Token
 
+	// Создание контекста с метаданными
 	md := metadata.New(map[string]string{
 		"authorization": token,
 	})
 
-	// Создание контекста с метаданными
 	expressions := map[string]exprRes{
 		"2+2*2": {
 			timeout: config.TimeCalculatePlus + config.TimeCalculateMult + time.Second*2,
