@@ -148,7 +148,7 @@ func TestProcessJWT(t *testing.T) {
 				On("App", mock.Anything, app.ID).
 				Return(app, nil)
 
-			err = ProcessJWT(tt.args.ctx, tt.args.tokenString, appRepo)
+			err, _ = ProcessJWT(tt.args.ctx, tt.args.tokenString, appRepo)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ProcessJWT() error = %v, wantErr %v", err, tt.wantErr)
 				return
