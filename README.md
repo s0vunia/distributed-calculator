@@ -18,7 +18,7 @@
    * make rebuild (docker-compose down && docker-compose up --scale agent=любое_число_агентов --scale postgres-for-test-integration=0 -d --no-recreate --build)
    * make down (docker-compose down)
    * make clean (docker-compose down --rmi all --volumes)
-   * make up-for-test-integration (docker-compose --env-file .env-test-integration up orchestrator agent rabbitmq postgres-for-test-integration --scale agent=любое_число_агентов --scale postgres=0  -d --no-recreate --build_
+   * make up-for-test-integration (docker-compose --env-file .env-test-integration up orchestrator agent rabbitmq postgres-for-test-integration --scale agent=любое_число_агентов --scale postgres=0  -d --no-recreate --build)
 ## Запросы
 ### ВНИМАНИЕ, ОБЩЕНИЕ АГЕНТОВ И ОРКЕСТРАТОРА ПРОИСХОДИТ ЧЕРЕЗ БРОКЕР СООБЩЕНИЙ, <i><u>ПОЭТОМУ ОТКРЫТОЕ API НАПИСАНО НА GRPC</u></i>. ЭТО ОБСУЖДАЛОСЬ НА ОДНОЙ ИЗ КОНСУЛЬТАЦИЙ, <u>НЕ СНИЖАЙТЕ ЗА ЭТО БАЛЛЫ!!!</u>
 
@@ -158,7 +158,7 @@ docker-compose поднимает две сущности через точки 
 4. gRPC
 ## Критерии
 ___ОЖИДАЕМАЯ ОЦЕНКА 60-70 БАЛЛОВ, ЕСЛИ С ЧЕМ-ТО НЕ СОГЛАСЕН - ПИШИ В ТГ [@Badimonchik](https://t.me/Badimonchik)___  
-___ПОЖАЛУЙСТА, СОЗДАВАЙТЕ ISSUE ПРИ ОЦЕНКЕ ПРОЕКТА, ТАК ВСЕМ БУДЕТ ПРОЩЕ___
+___ПОЖАЛУЙСТА, СОЗДАВАЙТЕ ISSUE ПРИ ОЦЕНКЕ ПРОЕКТА, ТАК ВСЕМ БУДЕТ ПРОЩЕ___  
 0. Необходимые требования: - ___ВЫПОЛНЕНО___
    - проект находится на GitHab - в ЛМС в решении вы сдаёте только ссылку на GitHab
    - к проекту прилагается файл с подробным описанием (как заупустить и проверить)
