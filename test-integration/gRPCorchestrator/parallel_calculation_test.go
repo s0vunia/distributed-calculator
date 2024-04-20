@@ -13,24 +13,19 @@ import (
 	"google.golang.org/grpc/status"
 	"log"
 	"myproject/internal/config"
-	"os"
 	"os/exec"
 	"testing"
 	"time"
 )
 
 func TestGRPCServiceParallelCalculation(t *testing.T) {
-	mydir, err := os.Getwd()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(mydir)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	cfg := config.MustLoadPath("../../config/local_tests.yaml")
 
 	agents := 2
 	cmd := exec.Command("make", "up", fmt.Sprintf("AGENTS=%d", agents))
 	cmd.Dir = "../"
-	err = cmd.Run()
+	err := cmd.Run()
 	//assert.NoError(t, err)
 
 	conn, err := grpc.Dial("localhost:44044", grpc.WithInsecure())
@@ -81,6 +76,7 @@ func TestGRPCServiceParallelCalculation(t *testing.T) {
 
 	for key, expr := range expressions {
 		ctx := metadata.NewOutgoingContext(context.Background(), md)
+		ctx = context.WithValue(ctx, "userID", 1)
 		createExpressionResponse, err := client.CreateExpression(ctx, &orchestrator.CreateExpressionRequest{
 			IdempotencyKey: uuid.New().String(),
 			Expression:     key,

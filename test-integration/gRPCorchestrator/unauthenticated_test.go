@@ -12,13 +12,15 @@ import (
 )
 
 func TestGRPCServiceUnauthenticated(t *testing.T) {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	conn, err := grpc.Dial("localhost:44044", grpc.WithInsecure())
 	assert.NoError(t, err)
 	defer conn.Close()
 	client := orchestrator.NewOrchestratorClient(conn)
 
-	// not authenticated
-	response, err := client.CreateExpression(context.Background(), &orchestrator.CreateExpressionRequest{
+	// no authenticated (not use token)
+	ctx := context.WithValue(context.Background(), "userID", 1)
+	response, err := client.CreateExpression(ctx, &orchestrator.CreateExpressionRequest{
 		IdempotencyKey: "abc",
 		Expression:     "2+2*2",
 	})

@@ -17,6 +17,7 @@ import (
 )
 
 func TestGRPCServiceAuthenticated(t *testing.T) {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	cfg := config.MustLoadPath("../../config/local_tests.yaml")
 
 	conn, err := grpc.Dial("localhost:44044", grpc.WithInsecure())
@@ -31,8 +32,8 @@ func TestGRPCServiceAuthenticated(t *testing.T) {
 		Password: password,
 	})
 	st, ok := status.FromError(err)
-	if ok {
-		assert.Equal(t, st.Code(), codes.AlreadyExists)
+	if ok && st.Code() != codes.OK {
+		assert.Equal(t, codes.AlreadyExists, st.Code())
 	}
 	log.Printf("%v", registerResponse)
 
@@ -70,6 +71,7 @@ func TestGRPCServiceAuthenticated(t *testing.T) {
 
 	for key, expr := range expressions {
 		ctx := metadata.NewOutgoingContext(context.Background(), md)
+		ctx = context.WithValue(ctx, "userID", 1)
 		createExpressionResponse, err := client.CreateExpression(ctx, &orchestrator.CreateExpressionRequest{
 			IdempotencyKey: uuid.New().String(),
 			Expression:     key,
