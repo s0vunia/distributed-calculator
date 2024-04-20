@@ -71,10 +71,12 @@ func (s *serverAPI) GetExpression(
 		return nil, status.Error(codes.InvalidArgument, "expressionId is required")
 	}
 
-	expression, err := s.orchestrator.GetExpression(ctx, in.ExpressionId)
+	userID := ctx.Value("userID").(float64)
+	userIdStr := strconv.Itoa(int(userID))
+	expression, err := s.orchestrator.GetExpression(ctx, in.ExpressionId, userIdStr)
 	if err != nil {
 		if errors.Is(err, repositories.ErrExpressionNotFound) {
-			return nil, status.Error(codes.AlreadyExists, "user already exists")
+			return nil, status.Error(codes.NotFound, "expression not found")
 		}
 		log.Error(err)
 		return nil, status.Error(codes.Internal, "failed to get expression")

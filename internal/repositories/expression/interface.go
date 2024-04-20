@@ -12,7 +12,7 @@ type Repository interface {
 	// GetExpressions возвращает список expression
 	GetExpressions(ctx context.Context, userId string) ([]*models.Expression, error)
 	// GetExpressionById возвращает expression по id
-	GetExpressionById(context.Context, string) (*models.Expression, error)
+	GetExpressionById(ctx context.Context, id, userId string) (*models.Expression, error)
 	// GetExpressionByKey возвращает expression по ключу идемпотентности
 	GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error)
 	// UpdateExpression обновляет expression

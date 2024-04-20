@@ -79,10 +79,10 @@ func (r *PostgresRepository) GetExpressions(ctx context.Context, userId string) 
 	return expressions, nil
 }
 
-func (r *PostgresRepository) GetExpressionById(ctx context.Context, id string) (*models.Expression, error) {
+func (r *PostgresRepository) GetExpressionById(ctx context.Context, id, userId string) (*models.Expression, error) {
 	const op = "repositories.postgres.GetExpressionById"
 
-	row := r.db.QueryRowContext(ctx, "SELECT id, user_id, idempotency_key, value, state, result FROM expressions WHERE id=$1", id)
+	row := r.db.QueryRowContext(ctx, "SELECT id, user_id, idempotency_key, value, state, result FROM expressions WHERE id=$1 and user_id=$2", id, userId)
 	var expr models.Expression
 	var result sql.NullFloat64
 	if err := row.Scan(&expr.Id, &expr.UserId, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {

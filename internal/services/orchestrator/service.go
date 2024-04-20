@@ -19,7 +19,7 @@ type IOrchestrator interface {
 	CreateExpression(ctx context.Context, expression, idempotencyKey, userId string) (error, string)
 	GetExpressions(ctx context.Context, userId string) ([]*models.Expression, error)
 	GetSubExpressions(ctx context.Context) ([]*models.SubExpression, error)
-	GetExpression(ctx context.Context, id string) (*models.Expression, error)
+	GetExpression(ctx context.Context, id, userId string) (*models.Expression, error)
 	GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error)
 	UpdateExpressionState(ctx context.Context, key string, state models.ExpressionState) error
 	// ReceiveHeartbeats принимает heartbeats из очереди от агента
@@ -96,8 +96,8 @@ func (o *Orchestrator) GetSubExpressions(ctx context.Context) ([]*models.SubExpr
 	return o.subExpressionRepository.GetSubExpressionsList(ctx)
 }
 
-func (o *Orchestrator) GetExpression(ctx context.Context, id string) (*models.Expression, error) {
-	return o.expressionRepository.GetExpressionById(ctx, id)
+func (o *Orchestrator) GetExpression(ctx context.Context, id, userId string) (*models.Expression, error) {
+	return o.expressionRepository.GetExpressionById(ctx, id, userId)
 }
 
 func (o *Orchestrator) GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error) {
