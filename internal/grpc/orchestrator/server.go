@@ -37,6 +37,9 @@ func (s *serverAPI) CreateExpression(
 		return nil, status.Error(codes.InvalidArgument, "idempotencyKey is required")
 	}
 
+	if !orchestratorutils.ValidateExpression(in.Expression) {
+		return nil, status.Error(codes.InvalidArgument, "invalid expression")
+	}
 	var expressionId string
 	expressionByKey, err := s.orchestrator.GetExpressionByKey(ctx, in.IdempotencyKey)
 	if expressionByKey != nil {
