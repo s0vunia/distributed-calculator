@@ -16,11 +16,11 @@ import (
 )
 
 type IOrchestrator interface {
-	CreateExpression(ctx context.Context, expression, idempotencyKey string) (error, string)
-	GetExpressions(ctx context.Context) ([]*models.Expression, error)
+	CreateExpression(ctx context.Context, expression, idempotencyKey, userId string) (error, string)
+	GetExpressions(ctx context.Context, userId string) ([]*models.Expression, error)
 	GetSubExpressions(ctx context.Context) ([]*models.SubExpression, error)
 	GetExpression(ctx context.Context, id string) (*models.Expression, error)
-	GetExpressionByKey(ctx context.Context, key string) (*models.Expression, error)
+	GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error)
 	UpdateExpressionState(ctx context.Context, key string, state models.ExpressionState) error
 	// ReceiveHeartbeats принимает heartbeats из очереди от агента
 	ReceiveHeartbeats()
@@ -73,8 +73,8 @@ func NewOrchestrator(ctx context.Context, expressionRepo expression.Repository,
 	return orch
 }
 
-func (o *Orchestrator) CreateExpression(ctx context.Context, expression, idempotencyKey string) (error, string) {
-	createdExpression, err := o.expressionRepository.CreateExpression(ctx, expression, idempotencyKey)
+func (o *Orchestrator) CreateExpression(ctx context.Context, expression, idempotencyKey, userId string) (error, string) {
+	createdExpression, err := o.expressionRepository.CreateExpression(ctx, expression, idempotencyKey, userId)
 	if err != nil {
 		return err, ""
 	}
@@ -88,8 +88,8 @@ func (o *Orchestrator) CreateExpression(ctx context.Context, expression, idempot
 	return nil, createdExpression.Id
 }
 
-func (o *Orchestrator) GetExpressions(ctx context.Context) ([]*models.Expression, error) {
-	return o.expressionRepository.GetExpressions(ctx)
+func (o *Orchestrator) GetExpressions(ctx context.Context, userId string) ([]*models.Expression, error) {
+	return o.expressionRepository.GetExpressions(ctx, userId)
 }
 
 func (o *Orchestrator) GetSubExpressions(ctx context.Context) ([]*models.SubExpression, error) {
@@ -100,8 +100,8 @@ func (o *Orchestrator) GetExpression(ctx context.Context, id string) (*models.Ex
 	return o.expressionRepository.GetExpressionById(ctx, id)
 }
 
-func (o *Orchestrator) GetExpressionByKey(ctx context.Context, key string) (*models.Expression, error) {
-	return o.expressionRepository.GetExpressionByKey(ctx, key)
+func (o *Orchestrator) GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error) {
+	return o.expressionRepository.GetExpressionByKey(ctx, key, userId)
 }
 
 func (o *Orchestrator) UpdateExpressionState(ctx context.Context, key string, state models.ExpressionState) error {

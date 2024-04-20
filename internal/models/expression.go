@@ -11,6 +11,7 @@ const (
 type Expression struct {
 	Result         float64         `json:"result"`
 	Id             string          `json:"id"`
+	UserId         string          `json:"userId"`
 	IdempotencyKey string          `json:"idempotencyKey"`
 	Value          string          `json:"value"`
 	State          ExpressionState `json:"state"`

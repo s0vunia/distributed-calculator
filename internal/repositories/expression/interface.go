@@ -8,13 +8,13 @@ import (
 
 type Repository interface {
 	// CreateExpression создает expression
-	CreateExpression(ctx context.Context, value string, idempotentKey string) (*models.Expression, error)
+	CreateExpression(ctx context.Context, value, idempotentKey, userId string) (*models.Expression, error)
 	// GetExpressions возвращает список expression
-	GetExpressions(context.Context) ([]*models.Expression, error)
+	GetExpressions(ctx context.Context, userId string) ([]*models.Expression, error)
 	// GetExpressionById возвращает expression по id
 	GetExpressionById(context.Context, string) (*models.Expression, error)
 	// GetExpressionByKey возвращает expression по ключу идемпотентности
-	GetExpressionByKey(context.Context, string) (*models.Expression, error)
+	GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error)
 	// UpdateExpression обновляет expression
 	UpdateExpression(context.Context, *models.Expression) error
 	// UpdateExpressionById обновляет результат expression по ID

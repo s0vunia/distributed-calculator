@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	orchv1 "github.com/s0vunia/protos/gen/go/orchestrator"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,6 +13,7 @@ import (
 	"myproject/internal/repositories"
 	"myproject/internal/services/orchestrator"
 	"myproject/internal/services/orchestrator/utils"
+	"strconv"
 )
 
 type serverAPI struct {
@@ -40,16 +42,20 @@ func (s *serverAPI) CreateExpression(
 	if !orchestratorutils.ValidateExpression(in.Expression) {
 		return nil, status.Error(codes.InvalidArgument, "invalid expression")
 	}
+	userID := ctx.Value("userID").(float64)
+	userIdStr := strconv.Itoa(int(userID))
 	var expressionId string
-	expressionByKey, err := s.orchestrator.GetExpressionByKey(ctx, in.IdempotencyKey)
+	expressionByKey, err := s.orchestrator.GetExpressionByKey(ctx, in.IdempotencyKey, userIdStr)
 	if expressionByKey != nil {
 		if err != nil {
+			log.Error(err)
 			return nil, status.Error(codes.Internal, "failed to create expression")
 		}
 		expressionId = expressionByKey.Id
 	} else {
-		err, expressionId = s.orchestrator.CreateExpression(ctx, in.Expression, in.IdempotencyKey)
+		err, expressionId = s.orchestrator.CreateExpression(ctx, in.Expression, in.IdempotencyKey, userIdStr)
 		if err != nil {
+			log.Error(err)
 			return nil, status.Error(codes.Internal, "failed to create expression")
 		}
 	}
@@ -70,6 +76,7 @@ func (s *serverAPI) GetExpression(
 		if errors.Is(err, repositories.ErrExpressionNotFound) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
 		}
+		log.Error(err)
 		return nil, status.Error(codes.Internal, "failed to get expression")
 	}
 
@@ -90,8 +97,12 @@ func (s *serverAPI) GetExpressions(
 	ctx context.Context,
 	in *orchv1.GetExpressionsRequest,
 ) (*orchv1.GetExpressionsResponse, error) {
-	expressions, err := s.orchestrator.GetExpressions(ctx)
+	userID := ctx.Value("userID").(float64)
+	userIdStr := strconv.Itoa(int(userID))
+
+	expressions, err := s.orchestrator.GetExpressions(ctx, userIdStr)
 	if err != nil {
+		log.Error(err)
 		return nil, status.Error(codes.Internal, "failed to get expressions")
 	}
 	var listOfExpression []*orchv1.GetExpressionResponse

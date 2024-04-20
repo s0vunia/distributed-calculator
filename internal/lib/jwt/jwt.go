@@ -29,25 +29,25 @@ func NewToken(user models.User, app models.App, duration time.Duration) (string,
 }
 
 // ProcessJWT Функция для извлечения app_id из JWT и проверки его валидности
-func ProcessJWT(ctx context.Context, tokenString string, appRepo app.Repository) error {
+func ProcessJWT(ctx context.Context, tokenString string, appRepo app.Repository) (error, *jwt.Token) {
 	// Извлечение app_id из JWT без проверки подписи
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 	if err != nil {
-		return fmt.Errorf("failed to parse JWT: %w", err)
+		return fmt.Errorf("failed to parse JWT: %w", err), nil
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return fmt.Errorf("invalid JWT")
+		return fmt.Errorf("invalid JWT"), nil
 	}
 
 	appID, ok := claims["app_id"].(float64)
 	if !ok {
-		return fmt.Errorf("app_id not found in JWT")
+		return fmt.Errorf("app_id not found in JWT"), nil
 	}
 	app, err := appRepo.App(ctx, int(appID))
 	if err != nil {
-		return fmt.Errorf("failed to get app: %w", err)
+		return fmt.Errorf("failed to get app: %w", err), nil
 	}
 
 	// Проверка валидности JWT с использованием полученного секрета
@@ -59,7 +59,7 @@ func ProcessJWT(ctx context.Context, tokenString string, appRepo app.Repository)
 	})
 
 	if err != nil {
-		return fmt.Errorf("invalid JWT: %w", err)
+		return fmt.Errorf("invalid JWT: %w", err), nil
 	}
-	return nil
+	return nil, token
 }

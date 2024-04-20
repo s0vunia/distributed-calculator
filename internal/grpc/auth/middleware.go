@@ -2,6 +2,7 @@ package authgrpc
 
 import (
 	"context"
+	gojwt "github.com/golang-jwt/jwt/v5"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -28,11 +29,17 @@ func JWTMiddleware(appRepo app.Repository) grpc.UnaryServerInterceptor {
 		// Здесь должен быть ваш код для проверки токена
 		// Например, вы можете использовать библиотеку для работы с JWT
 		// Если токен недействителен, верните ошибку
-		err := jwt.ProcessJWT(ctx, token, appRepo)
+		err, jwtToken := jwt.ProcessJWT(ctx, token, appRepo)
 		if err != nil {
 			return nil, status.Errorf(codes.Unauthenticated, "invalid token")
 		}
-
+		if claims, ok := jwtToken.Claims.(gojwt.MapClaims); ok {
+			userId, ok := claims["uid"].(float64)
+			if ok {
+				// Извлечение данных из токена
+				ctx = context.WithValue(ctx, "userID", userId)
+			}
+		}
 		// Если токен действителен, продолжайте обработку запроса
 		return handler(ctx, req)
 	}

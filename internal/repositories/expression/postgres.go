@@ -30,16 +30,17 @@ func NewPostgresRepository(dataSourceName string) (*PostgresRepository, error) {
 	return &PostgresRepository{db}, nil
 }
 
-func (r *PostgresRepository) CreateExpression(ctx context.Context, s, idempotencyId string) (*models.Expression, error) {
+func (r *PostgresRepository) CreateExpression(ctx context.Context, s, idempotencyId, userId string) (*models.Expression, error) {
 	var id string
 	expression := &models.Expression{
+		UserId:         userId,
 		IdempotencyKey: idempotencyId,
 		Value:          s,
 		State:          models.ExpressionState(models.ExpressionInProgress),
 	}
 
-	err := r.db.QueryRowContext(ctx, "INSERT INTO expressions (id, idempotency_key, value, state) VALUES (gen_random_uuid(), $1, $2, $3) RETURNING id",
-		expression.IdempotencyKey, expression.Value, expression.State).Scan(&id)
+	err := r.db.QueryRowContext(ctx, "INSERT INTO expressions (id, user_id, idempotency_key, value, state) VALUES (gen_random_uuid(), $1, $2, $3, $4) RETURNING id",
+		expression.UserId, expression.IdempotencyKey, expression.Value, expression.State).Scan(&id)
 
 	if err != nil {
 		return nil, fmt.Errorf("create expression failure %e", err)
@@ -49,10 +50,10 @@ func (r *PostgresRepository) CreateExpression(ctx context.Context, s, idempotenc
 	return expression, nil
 }
 
-func (r *PostgresRepository) GetExpressions(ctx context.Context) ([]*models.Expression, error) {
-	rows, err := r.db.QueryContext(ctx, "SELECT id, idempotency_key, value, state, result FROM expressions")
+func (r *PostgresRepository) GetExpressions(ctx context.Context, userId string) ([]*models.Expression, error) {
+	rows, err := r.db.QueryContext(ctx, "SELECT id, user_id, idempotency_key, value, state, result FROM expressions WHERE user_id=$1", userId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get expression failure %e", err)
 	}
 	defer rows.Close()
 
@@ -60,7 +61,7 @@ func (r *PostgresRepository) GetExpressions(ctx context.Context) ([]*models.Expr
 	for rows.Next() {
 		var expr models.Expression
 		var result sql.NullFloat64
-		if err := rows.Scan(&expr.Id, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
+		if err := rows.Scan(&expr.Id, &expr.UserId, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
 			return nil, err
 		}
 		if result.Valid {
@@ -81,10 +82,10 @@ func (r *PostgresRepository) GetExpressions(ctx context.Context) ([]*models.Expr
 func (r *PostgresRepository) GetExpressionById(ctx context.Context, id string) (*models.Expression, error) {
 	const op = "repositories.postgres.GetExpressionById"
 
-	row := r.db.QueryRowContext(ctx, "SELECT id, idempotency_key, value, state, result FROM expressions WHERE id=$1", id)
+	row := r.db.QueryRowContext(ctx, "SELECT id, user_id, idempotency_key, value, state, result FROM expressions WHERE id=$1", id)
 	var expr models.Expression
 	var result sql.NullFloat64
-	if err := row.Scan(&expr.Id, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
+	if err := row.Scan(&expr.Id, &expr.UserId, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", op, repositories.ErrExpressionNotFound)
 		}
@@ -99,11 +100,11 @@ func (r *PostgresRepository) GetExpressionById(ctx context.Context, id string) (
 	return &expr, nil
 }
 
-func (r *PostgresRepository) GetExpressionByKey(ctx context.Context, key string) (*models.Expression, error) {
-	row := r.db.QueryRowContext(ctx, "SELECT id, idempotency_key, value, state, result FROM expressions WHERE idempotency_key=$1", key)
+func (r *PostgresRepository) GetExpressionByKey(ctx context.Context, key, userId string) (*models.Expression, error) {
+	row := r.db.QueryRowContext(ctx, "SELECT id, user_id, idempotency_key, value, state, result FROM expressions WHERE idempotency_key=$1 AND user_id=$2", key, userId)
 	var expr models.Expression
 	var result sql.NullFloat64
-	if err := row.Scan(&expr.Id, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
+	if err := row.Scan(&expr.Id, &expr.UserId, &expr.IdempotencyKey, &expr.Value, &expr.State, &result); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
 		}
