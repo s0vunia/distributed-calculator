@@ -16,7 +16,7 @@ grpc:
 http:
   port: 8080
 postgres:
-  host: postgres
+  host: postgres-for-test-integration
   port: 5432
   db_name: testttdb
   user: testttuser

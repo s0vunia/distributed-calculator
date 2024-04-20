@@ -5,7 +5,10 @@ AGENTS ?=  1
 
 # Цель для запуска всех сервисов с указанным количеством экземпляров службы agent
 up:
-	@docker-compose up --scale agent=$(AGENTS) -d --no-recreate
+	@docker-compose up --scale agent=$(AGENTS) --scale postgres-for-test-integration=0 -d --no-recreate
+
+up-for-test-integration:
+	@docker-compose --env-file .env-test-integration up orchestrator agent rabbitmq postgres-for-test-integration --scale agent=$(AGENTS) --scale postgres=0  -d --no-recreate --build
 
 build:
 	@docker-compose up --scale agent=$(AGENTS) -d --no-recreate --build

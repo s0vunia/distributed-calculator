@@ -15,12 +15,24 @@ services:
   postgres:
     image: postgres:alpine
     environment:
-      POSTGRES_DB: testttdb
-      POSTGRES_USER: testttuser
-      POSTGRES_PASSWORD: testttpass
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./data/migrations/:/docker-entrypoint-initdb.d/
       - ./data/postgres/:/var/lib/postgresql/data
+    command: [ "postgres", "-c", "log_statement=all" ]
+    ports:
+      - "5432:5432"
+
+  postgres-for-test-integration:
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/migrations/:/docker-entrypoint-initdb.d/
     command: [ "postgres", "-c", "log_statement=all" ]
     ports:
       - "5432:5432"
@@ -37,7 +49,7 @@ services:
       - postgres
     environment:
       DATABASE_URL: postgres://testttuser:testttpass@postgres:5432/testttdb?sslmode=disable
-      CONFIG_PATH: ./config/config.yaml
+      CONFIG_PATH: ${CONFIG_PATH}
     ports:
       - '8080:8080'
       - '44044:44044'
@@ -62,6 +74,7 @@ services:
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
       DATABASE_URL: postgres://testttuser:testttpass@postgres:5432/testttdb?sslmode=disable
+      CONFIG_PATH: ${CONFIG_PATH}
     volumes:
       - './:/agent'
       - 'go_modules:/go/pkg/mod'
