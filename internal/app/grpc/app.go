@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"log"
 	"log/slog"
 	"myproject/internal/config"
@@ -73,6 +75,9 @@ func New(
 
 	authgrpc.Register(gRPCServer, authService)
 	orchestratorgrpc.Register(gRPCServer, orchestratorService, timeouts)
+
+	healthServer := health.NewServer()
+	grpc_health_v1.RegisterHealthServer(gRPCServer, healthServer)
 
 	return &App{
 		log:        log,
