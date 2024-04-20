@@ -8,21 +8,22 @@
 1. установить [Make](https://thelinuxcode.com/install-use-make-windows/) (
    опционально), [docker engine](https://docs.docker.com/engine/install/), [docker-compose](https://docs.docker.com/compose/install/)
 2. с помощью MakeFile: make build AGENT=3   
-   с помощью docker-compose: docker-compose up --scale agent=3 -d --no-recreate --build  
+   с помощью docker-compose: docker-compose up --scale agent=3 --scale postgres-for-test-integration=0 -d --no-recreate --build  
    (вместо трех можно подставить любое число - столько агентов запустится)
 3. ждем пару минут (зависит от компьютера и интернет-соединения) пока не запустятся все компоненты системы
 
 ## Доступные команды
-   * make build (docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build)
+   * make build (docker-compose up --scale agent=любое_число_агентов --scale postgres-for-test-integration=0 -d --no-recreate --build)
    * make scale любое_число_агентов (docker-compose --scale agent=любое_число_агентов)
-   * make rebuild (docker-compose down && docker-compose up --scale agent=любое_число_агентов -d --no-recreate --build)
+   * make rebuild (docker-compose down && docker-compose up --scale agent=любое_число_агентов --scale postgres-for-test-integration=0 -d --no-recreate --build)
    * make down (docker-compose down)
    * make clean (docker-compose down --rmi all --volumes)
+   * make up-for-test-integration (docker-compose --env-file .env-test-integration up orchestrator agent rabbitmq postgres-for-test-integration --scale agent=любое_число_агентов --scale postgres=0  -d --no-recreate --build_
 ## Запросы
 ### ВНИМАНИЕ, ОБЩЕНИЕ АГЕНТОВ И ОРКЕСТРАТОРА ПРОИСХОДИТ ЧЕРЕЗ БРОКЕР СООБЩЕНИЙ, <i><u>ПОЭТОМУ ОТКРЫТОЕ API НАПИСАНО НА GRPC</u></i>. ЭТО ОБСУЖДАЛОСЬ НА ОДНОЙ ИЗ КОНСУЛЬТАЦИЙ, <u>НЕ СНИЖАЙТЕ ЗА ЭТО БАЛЛЫ!!!</u>
 
 Проверять можно либо через Postman (рекомендуется), либо через grpc_cli
-* Быстрый импорт запросов с помощью [Postman](docs/Project.postman_collection.json)
+<b>Все примеры будут рассматриваться в Postman, чтобы интегрировать grpc запросы в Postman, <a href='https://habr.com/ru/companies/otus/articles/699616/'>прочитайте эту статью</a></b>
 
 0. Url адрес - localhost:44044
 1. auth.Auth Register - регистрирует пользователя
