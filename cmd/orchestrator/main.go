@@ -91,10 +91,7 @@ func Start() {
 	newAuth := auth.New(logSlog, userRepository, userRepository, appRepository, cfg.TokenTTL)
 
 	// Регистрация хендлеров
-	application := app.New(logSlog, newOrchestrator, appRepository, newAuth, cfg.HTTP.Port, cfg.GRPC.Port, cfg.CalculationTimeouts, cfg.TokenTTL)
-	go func() {
-		application.ServerHTTP.MustRun()
-	}()
+	application := app.New(logSlog, newOrchestrator, appRepository, newAuth, cfg.GRPC.Port, cfg.CalculationTimeouts, cfg.TokenTTL)
 	go func() {
 		application.GRPCServer.MustRun()
 	}()
@@ -105,7 +102,7 @@ func Start() {
 
 	<-stop
 
-	application.ServerHTTP.Stop()
+	application.GRPCServer.Stop()
 	log.Info("Gracefully stopped")
 
 }
