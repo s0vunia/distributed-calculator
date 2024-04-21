@@ -7,7 +7,7 @@ import (
 )
 
 func TestCalculate(t *testing.T) {
-	cfg := config.MustLoadPath("../../config/local_tests.yaml")
+	cfg := config.MustLoadPath("../../../config/local_tests.yaml")
 	type args struct {
 		expression *models.SubExpression
 	}
