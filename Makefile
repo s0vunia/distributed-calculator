@@ -11,7 +11,7 @@ up-for-test-integration:
 	@docker-compose --env-file .env-test-integration up orchestrator agent rabbitmq postgres-for-test-integration --scale agent=$(AGENTS) --scale postgres=0  -d --no-recreate --build
 
 build:
-	@docker-compose up --scale agent=$(AGENTS) -d --no-recreate --build
+	@docker-compose up --scale agent=$(AGENTS) --scale postgres-for-test-integration=0 -d --no-recreate --build
 # Цель для остановки всех сервисов
 down:
 	@docker-compose down
